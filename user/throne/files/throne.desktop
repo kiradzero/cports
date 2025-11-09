@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Throne
+Comment=Cross-platform GUI proxy utility
+Exec=throne
+Icon=throne
+Categories=Network;
+Terminal=false

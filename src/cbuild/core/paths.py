@@ -4,6 +4,7 @@ import pathlib
 import os.path
 
 _stage = 3
+_force_network = False
 
 
 def _expath(cwd, path):
@@ -47,6 +48,15 @@ def reinit_buildroot(rootdir, stage):
 def set_stage(stage):
     global _stage
     _stage = stage
+
+
+def set_force_network(force_network):
+    global _force_network
+    _force_network = force_network
+
+
+def force_network():
+    return _force_network
 
 
 def set_apk(cmd):

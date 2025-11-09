@@ -1854,6 +1854,10 @@ class Template(Package):
         ):
             allow_network = False
 
+        # override with force_network flag if set globally
+        if paths.force_network():
+            allow_network = True
+
         lld_args = compiler._get_lld_cpuargs(self.link_threads)
         if self.options["linkundefver"]:
             lld_args += ["--undefined-version"]

@@ -33,6 +33,7 @@ opt_signkey = None
 opt_force = False
 opt_mdirtemp = False
 opt_nonet = False
+opt_forcenet = False
 opt_dirty = False
 opt_keeptemp = False
 opt_forcecheck = False
@@ -113,7 +114,7 @@ def handle_options():
     global opt_harch, opt_gen_dbg, opt_check, opt_ccache, opt_tltocachesize
     global opt_sccache, opt_makejobs, opt_lthreads, opt_nocolor, opt_signkey
     global opt_force, opt_mdirtemp, opt_allowcat, opt_restricted
-    global opt_nonet, opt_dirty, opt_statusfd, opt_keeptemp, opt_forcecheck
+    global opt_nonet, opt_forcenet, opt_dirty, opt_statusfd, opt_keeptemp, opt_forcecheck
     global opt_checkfail, opt_stage, opt_altrepo, opt_stagepath, opt_bldroot
     global opt_blddir, opt_pkgpath, opt_srcpath, opt_cchpath, opt_updatecheck
     global opt_acceptsum, opt_comp, opt_maint, opt_epkgs, opt_tdata, opt_nolock
@@ -242,6 +243,13 @@ def handle_options():
         const=True,
         default=opt_nonet,
         help="Do not ever use remote repositories.",
+    )
+    parser.add_argument(
+        "--force-network",
+        action="store_const",
+        const=True,
+        default=opt_forcenet,
+        help="Force network access in all build phases (useful for VPN workarounds).",
     )
     parser.add_argument(
         "-D",
@@ -373,6 +381,7 @@ def handle_options():
             "allow_restricted", fallback=opt_restricted
         )
         opt_nonet = not bcfg.getboolean("remote", fallback=not opt_nonet)
+        opt_forcenet = bcfg.getboolean("force_network", fallback=opt_forcenet)
 
     if "flags" not in global_cfg:
         global_cfg["flags"] = {}
@@ -444,6 +453,9 @@ def handle_options():
 
     if cmdline.no_remote:
         opt_nonet = True
+
+    if cmdline.force_network:
+        opt_forcenet = True
 
     if cmdline.no_lock:
         opt_nolock = True
@@ -2891,6 +2903,8 @@ def fire():
             sys.exit(1)
     # let apk know if we're using network
     cli.set_network(not opt_nonet)
+    # set force_network flag globally
+    paths.set_force_network(opt_forcenet)
 
     try:
         aret = subprocess.run([paths.apk(), "--version"], capture_output=True)

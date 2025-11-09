@@ -64,6 +64,10 @@ sources = sources
 keep_stage = no
 # whether to attempt using remote repositories (if available)
 remote = yes
+# force network access in all build phases (useful for VPN workarounds)
+# this overrides network isolation in bwrap and allows internet access
+# even in phases where it's normally disabled (build, install, etc.)
+force_network = no
 # categories that are permitted to build; primarily for bulk builds
 # custom categories are not supported! the mechanism though which
 # they work is an implementation detail subject to change at any time
