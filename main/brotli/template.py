@@ -1,7 +1,7 @@
 # update main/python-brotli alongside this
 pkgname = "brotli"
 pkgver = "1.1.0"
-pkgrel = 0
+pkgrel = 2
 build_style = "cmake"
 hostmakedepends = ["cmake", "ninja", "pkgconf"]
 pkgdesc = "General-purpose lossless compression algorithm"

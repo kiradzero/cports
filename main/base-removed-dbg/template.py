@@ -1,6 +1,6 @@
 pkgname = "base-removed-dbg"
 pkgver = "1.0"
-pkgrel = 19
+pkgrel = 22
 build_style = "meta"
 provides = []
 pkgdesc = "Removed debug packages"
@@ -59,7 +59,6 @@ for _pkg in [
     "libnss_winbind",
     "libntfs-3g",
     "libnuma",
-    "libpcre2",
     "libpkgconf",
     "libplist++",
     "libpq",
@@ -75,7 +74,6 @@ for _pkg in [
     "libsysfs",
     "libtotem-plparser-mini",
     "libtspi",
-    "libunbound",
     "libuuid",
     "libuuid-progs",
     "libvala",
@@ -105,7 +103,6 @@ for _pkg in [
     "tzutils",
     "valadoc",
     "xmlwf",
-    "xsltproc",
     "zramctl",
 ]:
     provides += [f"{_pkg}-dbg=9999"]

@@ -1,6 +1,6 @@
 pkgname = "kwin-x11"
-pkgver = "6.4.5"
-pkgrel = 2
+pkgver = "6.5.1"
+pkgrel = 1
 build_style = "cmake"
 # XXX drop libexec
 configure_args = ["-DCMAKE_INSTALL_LIBEXECDIR=/usr/lib"]
@@ -16,6 +16,7 @@ make_check_args = [
     + "|kwin-testInputMethod"  # flakes
     + "|kwin-testX11Window"  # flaky subtests (especially testStackAboveFromApplication)
     + "|kwin-testXwaylandInput"  # flaky testPointerEnterLeaveSsd() '!window->readyForPainting()' returned FALSE
+    + "|kwin-testPointerInput"  # flaky segfaults of testConfineToScreenGeometry subtests on loongarch64
     + ")",
     # parallel tests cause a bunch of flakes
     "-j1",
@@ -47,6 +48,7 @@ makedepends = [
     "kidletime-devel",
     "kirigami-devel",
     "knewstuff-devel",
+    "knighttime-devel",
     "knotifications-devel",
     "kpackage-devel",
     "kscreenlocker-devel",
@@ -80,7 +82,7 @@ license = (
 )
 url = "https://invent.kde.org/plasma/kwin-x11"
 source = f"$(KDE_SITE)/plasma/{'.'.join(pkgver.split('.')[0:3])}/kwin-x11-{pkgver}.tar.xz"
-sha256 = "cea91879467afdfa2caf0ec6dd7256eae78defa970cdc9a947fefd85d417acb1"
+sha256 = "f17efc6169cf141f7d0c6fa871bd63fa69fe3ee9d70f1c515450f0a25dce4a12"
 hardening = ["vis"]
 
 

@@ -24,6 +24,16 @@ def pre_prepare(self):
         "0.2.10",
         allow_network=True,
     )
+    # rustix loongarch64
+    self.do(
+        "cargo",
+        "update",
+        "--package",
+        "libc",
+        "--precise",
+        "0.2.174",
+        allow_network=True,
+    )
 
 
 def install(self):

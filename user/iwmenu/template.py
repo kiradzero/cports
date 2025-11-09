@@ -1,5 +1,5 @@
 pkgname = "iwmenu"
-pkgver = "0.2.0"
+pkgver = "0.3.0"
 pkgrel = 0
 build_style = "cargo"
 hostmakedepends = ["cargo-auditable"]
@@ -9,7 +9,7 @@ pkgdesc = "Menu-driven Wi-Fi management interface"
 license = "GPL-3.0-or-later"
 url = "https://github.com/e-tho/iwmenu"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "7be3ce6c2cddd3bc5fef7a0ca935fba0490b8e621e2e8188b4e88a85af1c8351"
+sha256 = "9537bf39032a229558e34f7e98700bb0f1924d818aa4bc55ee92c7ddf4bd73b9"
 # no tests defined
 options = ["!check"]
 

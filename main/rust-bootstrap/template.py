@@ -1,5 +1,5 @@
 pkgname = "rust-bootstrap"
-pkgver = "1.88.0"
+pkgver = "1.90.0"
 pkgrel = 0
 # satisfy revdeps
 makedepends = ["zlib-ng-compat", "ncurses-libs", "zstd"]
@@ -18,38 +18,38 @@ options = ["!strip"]
 match self.profile().arch:
     case "aarch64":
         sha256 = [
-            "b4d100f5cdf86f9fd6571b9cec7df7358b8886da76f4a4fbce2fa7ec418776ab",
-            "8177b2cb1ff75a882cba27ce9edead78b907696ac0c602d93d7484cc34f10f5b",
+            "40944a144ecce8a70919623ac25c19b2ef4da3a59349d65ae8ef32dc39e77c1c",
+            "6875a53259f6d79c63fe4a90b073e6a296d70dea22460737ef7f901f22419496",
         ]
     case "loongarch64":
         sha256 = [
-            "ea416c46066562f3d2558e8bcb8104a6ebc8829583f5af9f5de940d2d88be6d8",
-            "b157fd911fcd8b24eadfe6ecbecdde17eda9776e67fcec34b44179eefc08df6a",
+            "5ea8c79a0f3c3560a1d53ead275e174ca66d473e13ce962011bdf9bec7ff2e02",
+            "2c5aae092ffb4c1f018410e30d13f0618c2137eb7091067448bef02fb9a1267d",
         ]
     case "ppc64le":
         sha256 = [
-            "8cdfd3e4cc8510cb09cbd013373f26af0a5ca22c6690ff26072dcc90144027fd",
-            "c4a8aa092b0dced816779cf3eceb0a41f9590d657a70c442c722418a4abaf966",
+            "a754f90fdfd0c7e2da1a6ee52b9b54ad557362017a1d18590a94eccd54587b62",
+            "112cc980691915ff49162e23966a7a820aedb903e558b64caa78490ec99510a9",
         ]
     case "ppc64":
         sha256 = [
-            "8d592d9aaef29ca141f08a19ac759bef437df97180314f5c20ac7afb48ac7ed9",
-            "4dc20d21a64d8e58a241e133bdd4b842f3ec8af3267440ddeb34c1c0f563325e",
+            "05b6a0b32042b6e261a5f84dbfddbc521a1baf9a19c32e26a61b1f8cffcb4164",
+            "402417e6f54fd8aa508db1f07b555b3cbe79f5097d901c88021325d1a90b1365",
         ]
     case "ppc":
         sha256 = [
-            "b7ac9ddbbd809da7cfa0c23dae4a14806bc4f62349c81f143ace2473d89f8e3b",
-            "12dd0563682a72b336964f4fb2793ffbb5bd71f4809cdced44be1b5a7bc973b1",
+            "8deb6f91e847a495c2b5ee5bb02afae0ff210a753848a5ad7e7bf65ad50274bc",
+            "3cadb58d448a4b26da94529cbc3e7cbd73e605144ff5b2bf0e2dbe3a99686e52",
         ]
     case "riscv64":
         sha256 = [
-            "9fa7bb602f4a9bd30702059936487338040b1a5319d3d3efbe7925eab5b19437",
-            "dcb0bf6ddb3d82142933e10ffd106e585ccda908638836d36feda5c592cd052d",
+            "72f6902372c809ee6564f252278678c3d8393ef3abe578a7fd10bf9182fd8aea",
+            "a432728db74eead923069bb9f934756f526470813e21a60822263c2d916f8d95",
         ]
     case "x86_64":
         sha256 = [
-            "c6e5815140ae9328307ad87dd35da41e2f053bb2d446b421a3fd1731581d71f7",
-            "f0b663f73c32d625028d41bfb61e24b7ccf56d3bc2816aaa88bc34dd46f9f3b4",
+            "9dadc11718f9d4c638ed5ebebee2b505699476b15b1e1f260446d169abba4bca",
+            "1533e9980331933c1ccc0eefebdd6a4d90f00dfc682e46f08c4298ae88046412",
         ]
     case _:
         broken = f"not yet built for {self.profile().arch}"
