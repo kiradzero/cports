@@ -1,10 +1,16 @@
 pkgname = "openmw"
-pkgver = "0.49.0"
+pkgver = "0.50.0"
 pkgrel = 1
 build_style = "cmake"
 configure_args = [
     "-DCMAKE_POLICY_VERSION_MINIMUM=3.5",
     "-DBUILD_OPENCS=ON",
+    # sanitize the paths a bit because all the files
+    # there are considered immutable, no need to separate
+    "-DGLOBAL_CONFIG_PATH=/usr/share",
+    "-DGLOBAL_DATA_PATH=/usr/share",
+    # more compliant icon path
+    "-DICONDIR=/usr/share/icons/hicolor/256x256/apps",
     "-DOPENMW_USE_SYSTEM_BULLET=OFF",
     "-DOPENMW_LTO_BUILD=ON",
 ]
@@ -46,13 +52,12 @@ source_paths = [
     "build/extern/fetched/bullet",
 ]
 sha256 = [
-    "5f31741d61cf7c736bbe522a1a33342773c7e1b713e7e20f3717eb8da2b1733d",
+    "7093a8cef26585220658569eb84636c5ab901e82f74c8a3f7a3a8aec35bfc54c",
     "7d7fc38c9a52dbda0ba1dab70d1ed59da1178ab1c4fa209cdb7cc2dcfce8e4ea",
     "baa642c906576d4d98d041d0acb80d85dd6eff6e3c16a009b1abf1ccd2bc0a61",
 ]
 # unit tests are off
-# FIXME lintpixmaps
-options = ["!check", "!lintpixmaps"]
+options = ["!check"]
 
 if self.profile().endian == "big":
     broken = "esm loader is not ready etc."
@@ -68,14 +73,12 @@ else:
 def _(self):
     self.pkgdesc = "Open implementation of Morrowind Creation Set"
     self.depends = [self.parent]
-    # FIXME lintpixmaps
-    self.options = ["!lintpixmaps"]
 
     return [
-        "etc/openmw/defaults-cs.bin",
         "usr/bin/openmw-cs",
         "usr/share/applications/org.openmw.cs.desktop",
-        "usr/share/pixmaps/openmw-cs.png",
+        "usr/share/icons/hicolor/256x256/apps/openmw-cs.png",
+        "usr/share/openmw/defaults-cs.bin",
     ]
 
 

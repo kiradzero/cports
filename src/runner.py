@@ -58,6 +58,7 @@ opt_maint = "unknown <cports@local>"
 opt_tdata = {}
 opt_nolock = False
 opt_nodepcheck = False
+opt_verbose = False
 
 #
 # INITIALIZATION ROUTINES
@@ -118,7 +119,7 @@ def handle_options():
     global opt_checkfail, opt_stage, opt_altrepo, opt_stagepath, opt_bldroot
     global opt_blddir, opt_pkgpath, opt_srcpath, opt_cchpath, opt_updatecheck
     global opt_acceptsum, opt_comp, opt_maint, opt_epkgs, opt_tdata, opt_nolock
-    global opt_keypath, opt_apkrepo, opt_nodepcheck
+    global opt_keypath, opt_apkrepo, opt_nodepcheck, opt_verbose
 
     # respect NO_COLOR
     opt_nocolor = ("NO_COLOR" in os.environ) or not sys.stdout.isatty()
@@ -325,6 +326,14 @@ def handle_options():
         help="Do not protect paths with advisory locks (dangerous).",
     )
     parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_const",
+        const=True,
+        default=opt_verbose,
+        help="Verbose output (from cbuild and builds if supported).",
+    )
+    parser.add_argument(
         "command",
         nargs="+",
         help="The command to issue. See Commands in Usage.md.",
@@ -474,6 +483,9 @@ def handle_options():
 
     if cmdline.no_depends_check:
         opt_nodepcheck = True
+
+    if cmdline.verbose:
+        opt_verbose = True
 
     if cmdline.temporary:
         mdp = pathlib.Path.cwd() / opt_bldroot
@@ -1652,7 +1664,6 @@ def do_update_check(tgt):
         print(s)
 
     pkgs = []
-    verbose = False
 
     if len(cmdline.command) < 2:
         cats = opt_allowcat.strip().split()
@@ -1660,16 +1671,15 @@ def do_update_check(tgt):
         for cat in cats:
             pkgs += _collect_tmpls(None, cat)
     else:
-        pkgs.append(cmdline.command[1])
-        if len(cmdline.command) > 2:
-            verbose = True
+        for pkgn in cmdline.command[1:]:
+            pkgs.append(pkgn)
 
     tmpls = []
     for pkg in pkgs:
         tmpls.append(_do_readpkg(pkg))
 
     if len(tmpls) == 1:
-        cv = update_check.update_check(tmpls[0], verbose)
+        cv = update_check.update_check(tmpls[0], opt_verbose)
         for pv, nv in cv:
             _print_upd(tmpls[0].full_pkgname, pv, nv)
         return
@@ -1682,7 +1692,7 @@ def do_update_check(tgt):
         ),
     )
     for tmpl in stmpls:
-        cv = update_check.update_check(tmpl, verbose)
+        cv = update_check.update_check(tmpl, opt_verbose)
         # now we can actually print the versions
         for pv, nv in cv:
             _print_upd(tmpl.full_pkgname, pv, nv)
@@ -2855,7 +2865,7 @@ def fire():
     from cbuild.apk import cli
     from cbuild.util import flock
 
-    logger.init(not opt_nocolor, opt_timing)
+    logger.init(not opt_nocolor, opt_timing, opt_verbose)
     flock.set_nolock(opt_nolock)
 
     # set host arch to provide early guarantees
