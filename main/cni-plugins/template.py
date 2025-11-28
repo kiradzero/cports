@@ -1,6 +1,6 @@
 pkgname = "cni-plugins"
 pkgver = "1.7.1"
-pkgrel = 4
+pkgrel = 5
 hostmakedepends = ["bash", "go"]
 makedepends = ["linux-headers"]
 pkgdesc = "Standard CNI plugins for containers"
@@ -10,6 +10,10 @@ source = f"https://github.com/containernetworking/plugins/archive/refs/tags/v{pk
 sha256 = "95b639f8ccbb714da98e331ef8813f790d447fce5417f2f8a575f3c62bfb1474"
 # can't run tests inside namespaces
 options = ["!check"]
+
+# relocation errors when linking
+if self.profile().arch == "loongarch64":
+    env = {"CGO_ENABLED": "0"}
 
 
 def post_prepare(self):

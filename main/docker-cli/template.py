@@ -1,6 +1,6 @@
 pkgname = "docker-cli"
 pkgver = "28.3.2"
-pkgrel = 2
+pkgrel = 3
 build_style = "makefile"
 _commit = "ce1223035ac3ab8922717092e63a184cf67b493d"
 make_build_target = "dynbinary"
@@ -25,6 +25,9 @@ env = {
 # nah
 options = ["!check"]
 
+if self.profile().arch == "loongarch64":
+    broken = "PIC linking issues"
+
 
 def prepare(self):
     # figure out why this doesn't work otherwise anymore without net
@@ -36,7 +39,10 @@ def init_build(self):
 
     self.env["GOPATH"] = str(self.chroot_cwd)
     self.env["GOBIN"] = str(self.chroot_cwd / "bin")
-    self.env["CGO_ENABLED"] = "1"
+    if self.profile().arch == "loongarch64":
+        self.env["CGO_ENABLED"] = "0"
+    else:
+        self.env["CGO_ENABLED"] = "1"
     self.env.update(golang.get_go_env(self))
 
 
