@@ -1,6 +1,6 @@
 pkgname = "keyd"
-pkgver = "2.5.0"
-pkgrel = 2
+pkgver = "2.6.0"
+pkgrel = 1
 build_style = "makefile"
 make_check_target = "test"
 make_use_env = True
@@ -9,7 +9,7 @@ pkgdesc = "Key remapping daemon for linux"
 license = "MIT"
 url = "https://github.com/rvaiya/keyd"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "93ec6c153ef673a7a8b4d8b686494dee11d182513f4531c71dce15a8db7f6c1c"
+sha256 = "697089681915b89d9e98caf93d870dbd4abce768af8a647d54650a6a90744e26"
 hardening = ["vis", "cfi"]
 # tests want /dev/uinput
 options = ["!check"]
@@ -23,3 +23,4 @@ def post_install(self):
     self.install_service("^/keyd")
     self.install_service("^/keyd.user")
     self.install_sysusers("^/sysusers.conf")
+    self.install_tmpfiles("^/tmpfiles.conf")

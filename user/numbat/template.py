@@ -1,17 +1,18 @@
 pkgname = "numbat"
-pkgver = "1.16.0"
+pkgver = "1.20.0"
 pkgrel = 1
 build_style = "cargo"
+prepare_after_patch = True
 # Tries to access network
 make_check_args = ["--", "--skip=examples_can_be_parsed_and_interpreted"]
-hostmakedepends = ["cargo-auditable"]
-makedepends = ["rust-std"]
+hostmakedepends = ["cargo-auditable", "pkgconf"]
+makedepends = ["rust-std", "openssl3-devel"]
 depends = ["tzdb"]
 pkgdesc = "High-precision scientific calculator"
 license = "MIT OR Apache-2.0"
 url = "https://github.com/sharkdp/numbat"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "33f3744a31f62f7ebd985c6b3ec3c6a6d6f897527e8db5bc2de48dd299a63cdd"
+sha256 = "8b368bafe05eb25f776e516abd94c3a4899b32e520934b6cb4d123ec03f1e9dc"
 
 
 def install(self):

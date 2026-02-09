@@ -1,5 +1,5 @@
 pkgname = "php8.3"
-pkgver = "8.3.24"
+pkgver = "8.3.30"
 _majver = pkgver[0 : pkgver.rfind(".")]
 pkgrel = 0
 _apiver = "20230831"
@@ -133,7 +133,7 @@ pkgdesc = "HTML-embedded scripting language"
 license = "PHP-3.01"
 url = "https://www.php.net"
 source = f"{url}/distributions/php-{pkgver}.tar.gz"
-sha256 = "b827c512b59270c3dc7e19614314fc345022c423e6443c960746310792d0de82"
+sha256 = "e587dc95fb7f62730299fa7b36b6e4f91e6708aaefa2fff68a0098d320c16386"
 
 if self.profile().arch in ["loongarch64"]:
     makedepends += ["libucontext-devel"]
@@ -181,6 +181,9 @@ def post_patch(self):
         "sapi/fpm/tests/bug77780-header-sent-error.phpt",
         # probably fails because of zlib-ng-compat
         "ext/zlib/tests/bug48725.phpt",
+        "ext/zlib/tests/001.phpt",
+        "ext/zlib/tests/002.phpt",
+        "ext/zlib/tests/003.phpt",
         # most of these try connect to an ldap server and wait for timeout then autoskip
         "ext/ldap/tests/*.phpt",
     ]

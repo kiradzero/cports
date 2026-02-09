@@ -1,5 +1,5 @@
 pkgname = "kpublictransport"
-pkgver = "25.08.3"
+pkgver = "25.12.1"
 pkgrel = 0
 build_style = "cmake"
 # at least updatetest & cachetest flaky when parallel
@@ -17,6 +17,7 @@ makedepends = [
     "networkmanager-qt-devel",
     "protobuf-devel",
     "qt6-qtdeclarative-devel",
+    "qt6-qtlocation-devel",
     "zlib-ng-compat-devel",
 ]
 pkgdesc = "KDE library for accessing public transport information"
@@ -25,7 +26,7 @@ url = "https://api.kde.org/kdepim/kpublictransport/html"
 source = (
     f"$(KDE_SITE)/release-service/{pkgver}/src/kpublictransport-{pkgver}.tar.xz"
 )
-sha256 = "ed887df23d04a1ebd171b59c99dfaec26d62254e9a7ac4f8a7084ba301586c17"
+sha256 = "a460ee7ba0997d3ce8dee2b7d1f44e9ed35d35214c8dc0a3d933ae965f5f3648"
 
 
 @subpackage("kpublictransport-devel")

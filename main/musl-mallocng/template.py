@@ -1,6 +1,6 @@
 pkgname = "musl-mallocng"
 pkgver = "1.2.5_git20240705"
-pkgrel = 1
+pkgrel = 2
 _commit = "dd1e63c3638d5f9afb857fccf6ce1415ca5f1b8b"
 _mimalloc_ver = "2.1.7"
 build_style = "gnu_configure"
@@ -48,6 +48,7 @@ def post_extract(self):
     # but also remove musl's x86_64 asm memcpy as it's actually
     # noticeably slower than the c implementation
     self.rm("src/string/x86_64/memcpy.s")
+    self.rm("src/string/x86_64/memmove.s")
 
 
 def pre_install(self):

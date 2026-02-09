@@ -1,5 +1,5 @@
 pkgname = "chimerautils"
-pkgver = "14.3.1"
+pkgver = "15.0.3"
 pkgrel = 0
 build_style = "meson"
 configure_args = [
@@ -28,7 +28,7 @@ pkgdesc = "Chimera Linux userland"
 license = "BSD-2-Clause"
 url = "https://github.com/chimera-linux/chimerautils"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "0848b6a0cb930f8fbe33f4b5f72361f9ce1d6eb343debc1f00e6904e6a32c7a1"
+sha256 = "183ad94242316cad014b54668e0b117ba4d8f6978b1229cde3fc5cd913020751"
 hardening = ["vis", "cfi"]
 # no test suite
 options = ["bootstrap", "!check"]
@@ -37,7 +37,10 @@ if self.stage > 0:
     makedepends += ["linux-headers", "zstd-devel"]
     configure_args += ["-Dtiny=enabled"]
     # don't bother in stage 0
-    depends += ["sd-tools"]
+    depends += [
+        "cmd:systemd-tmpfiles!sd-tools",
+        "cmd:systemd-sysusers!sd-tools",
+    ]
 else:
     makedepends += ["libxo-devel-static"]
     configure_args += ["-Dzstd=disabled"]
@@ -112,6 +115,7 @@ def _(self):
         "cmd:ex",
         "cmd:fetch",
         "cmd:gencat",
+        "cmd:indent",
         "cmd:locate*",
         "cmd:m4",
         "cmd:nc",

@@ -1,5 +1,5 @@
 pkgname = "fastfetch"
-pkgver = "2.55.1"
+pkgver = "2.58.0"
 pkgrel = 0
 build_style = "cmake"
 configure_args = [
@@ -21,7 +21,6 @@ makedepends = [
     "vulkan-headers",
     "vulkan-loader-devel",
     "wayland-devel",
-    "xfconf-devel",
     "yyjson-devel",
     "zlib-ng-compat-devel",
 ]
@@ -30,7 +29,7 @@ pkgdesc = "Neofetch-like system information fetching tool"
 license = "MIT"
 url = "https://github.com/fastfetch-cli/fastfetch"
 source = f"{url}/archive/refs/tags/{pkgver}.tar.gz"
-sha256 = "65178a21158872990f570e09ca988a7dbeed3fbc27a6d64152ffdd73a9096fbd"
+sha256 = "95c6bb522d455ed0bd35cc0f7f3a44a70663c0e81d03fe9bfe6ffa5ea19c2b1d"
 tool_flags = {"CFLAGS": ["-DNDEBUG"]}
 # CFI: dies immediately (ffPlatformPathAddHome at FFlist.c:31:12)
 hardening = ["vis", "!cfi"]

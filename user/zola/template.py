@@ -1,5 +1,5 @@
 pkgname = "zola"
-pkgver = "0.21.0"
+pkgver = "0.22.1"
 pkgrel = 0
 build_style = "cargo"
 hostmakedepends = ["cargo-auditable", "pkgconf"]
@@ -8,7 +8,7 @@ pkgdesc = "Static site generator"
 license = "MIT"
 url = "https://www.getzola.org"
 source = f"https://github.com/getzola/zola/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "bbfbc0496cf6612b6030c6d97b0fd2567f5ec41e251f8874b6c9ccda4c8149d4"
+sha256 = "0f59479e05bce79e8d5860dc7e807ea818986094469ed8bf0bb46588ade95982"
 # generates completions with host bins
 options = ["!cross"]
 

@@ -1,5 +1,5 @@
 pkgname = "ksystemstats"
-pkgver = "6.5.3"
+pkgver = "6.5.5"
 pkgrel = 0
 build_style = "cmake"
 # XXX drop libexec
@@ -39,7 +39,7 @@ pkgdesc = "KDE Plugin based system monitoring daemon"
 license = "GPL-2.0-or-later AND LGPL-2.1-or-later"
 url = "https://invent.kde.org/plasma/ksystemstats"
 source = f"$(KDE_SITE)/plasma/{pkgver}/ksystemstats-{pkgver}.tar.xz"
-sha256 = "19b37e012648d27fe86fa300d2cd2ce65c21672d3ba2145ca6555baf0e2aa913"
+sha256 = "c51097403d084f22fcd8534ce6f439050b58a2ac60953ace2dc7012412adce9d"
 # silence some ~600 lines of spam...
 tool_flags = {"CXXFLAGS": ["-Wno-deprecated-declarations"]}
 file_modes = {

@@ -1,5 +1,5 @@
 pkgname = "comrak"
-pkgver = "0.48.0"
+pkgver = "0.50.0"
 pkgrel = 0
 build_style = "cargo"
 hostmakedepends = ["cargo-auditable", "pkgconf"]
@@ -8,10 +8,7 @@ pkgdesc = "CommonMark compatible GitHub Flavored Markdown parser and formatter"
 license = "BSD-2-Clause"
 url = "https://github.com/kivikakk/comrak"
 source = f"{url}/archive/v{pkgver}.tar.gz"
-sha256 = "91d136008082a5019df88255bef198e21f177cf7234895be4957ffeb92bd886e"
-
-if self.profile().arch in ["loongarch64"]:
-    broken = "linux-raw-sys does not support, can't bump (semver)"
+sha256 = "68adc783055136d7012d8a9f0f2ef1e876f92c8f8708f22977f89a6a1fe7e185"
 
 
 def post_install(self):

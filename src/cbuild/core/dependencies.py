@@ -77,6 +77,8 @@ def _is_rdep(pn):
         return False
     elif pn.startswith("virtual:"):
         return False
+    elif pn.startswith("soname:"):
+        return False
 
     return True
 
@@ -227,8 +229,8 @@ def _get_vers(pkgs, pkg, sysp, arch):
             allow_untrusted=True,
             return_repos=True,
         )
-    if out.returncode != 0:
-        return None, None
+    if out.returncode >= len(plist):
+        return {}, None
 
     # map the output to a dict
     for f in out.stdout.strip().decode().split("\n"):

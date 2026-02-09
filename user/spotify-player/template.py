@@ -1,5 +1,5 @@
 pkgname = "spotify-player"
-pkgver = "0.21.1"
+pkgver = "0.21.3"
 pkgrel = 0
 build_style = "cargo"
 make_build_args = [
@@ -27,10 +27,12 @@ pkgdesc = "Spotify player in the terminal with full feature parity"
 license = "MIT"
 url = "https://github.com/aome510/spotify-player"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "f4679325c06967ce28a697f05d7ca181dbbd832b0aa2a1ca1ec41512157347b1"
+sha256 = "1f7e42ebb340b7c83c0ab96a8ef21bce5acae9ef899ff9ecd377570fdd1f1dbe"
 
 if self.profile().wordsize == 32:
     broken = "needs atomic64"
+elif self.profile().arch == "loongarch64":
+    broken = "rustix/libc interaction garbage strikes again"
 
 
 def install(self):
