@@ -1,5 +1,5 @@
 pkgname = "topgrade"
-pkgver = "16.7.0"
+pkgver = "16.9.0"
 pkgrel = 0
 build_style = "cargo"
 hostmakedepends = ["cargo-auditable"]
@@ -8,9 +8,22 @@ pkgdesc = "Multiple package-manager system updater"
 license = "GPL-3.0-or-later"
 url = "https://github.com/topgrade-rs/topgrade"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "351a1f1a1676662aa00ad6440e7b493ae40fd40dd609cbe8b3920df981835aae"
+sha256 = "d6e8376c6363545ce8994703c33f18d50fb4f8c689a2bc196bed159010c9cf03"
 # generates completions with host binary
 options = ["!cross"]
+
+
+def pre_prepare(self):
+    # Required to fix compilation on ppc
+    self.do(
+        "cargo",
+        "update",
+        "--package",
+        "libc@0.2.179",
+        "--precise",
+        "0.2.182",
+        allow_network=True,
+    )
 
 
 def post_build(self):

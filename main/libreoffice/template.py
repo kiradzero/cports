@@ -1,5 +1,5 @@
 pkgname = "libreoffice"
-pkgver = "26.2.0.2"
+pkgver = "26.2.1.2"
 pkgrel = 0
 # riscv64: no handling of libcxxabi + likely too slow
 archs = ["x86_64", "ppc64le", "ppc64", "aarch64"]
@@ -214,10 +214,10 @@ source = [
     f"{_aurl}/y-crdt-0.23.5.tar.gz",
 ]
 sha256 = [
-    "1e12460692a850cf86daaf048b84bc98fee3987529dd46f4994146f0dbfa130b",
-    "80888662b5260be4d80d706cf22a8a62785fc2f86586ffb172587bdbadc9604b",
-    "423c28488a010e8a8330a0359da6cc0820fd1a24b5679d8f329759a949b5c156",
-    "23cf2cfa4bd2eebc182cfc38abff1fb3c648f5632ee85fcf40b0aef2a1f6ac97",
+    "18ce225f73fb2a37710b3ce2246a6fab9fb25ef10bc6960ac57b594bf5e8fc28",
+    "02f2a45c0f3ff2357ecb9e8165ce64743c892ea9b5acc24cae0c965c52382913",
+    "da279231c1b2eb21238411f1e8e09527bb5b7c17cce9993baf6624db4fd92568",
+    "4c78dde91e04e50090c861964923b0695fc21df1376cbbb500c8cdf435aa9143",
     "65599965d82c0e60332601d511dacb0241e796cabfa5550c72bb80c4bf89e8ad",
     "75823776fb51a9c526af904f1503a7afaaab900fba83eda64f8a41073724c870",
     "7d2797fe9f79a77009721e3f14fa4a1dec17a6d706bdc93f85f1f01d124fab66",

@@ -1,6 +1,6 @@
 pkgname = "chromium"
 # https://chromiumdash.appspot.com/releases?platform=Linux
-pkgver = "144.0.7559.96"
+pkgver = "146.0.7680.153"
 pkgrel = 0
 archs = ["aarch64", "ppc64le", "x86_64"]
 configure_args = [
@@ -35,6 +35,7 @@ configure_args = [
     'rustc_version="0"',
     "symbol_level=1",
     "treat_warnings_as_errors=false",
+    "safe_browsing_use_unrar=false",
     "use_clang_modules=false",
     "use_custom_libcxx=false",
     "use_dwarf5=true",
@@ -137,8 +138,15 @@ depends = [
 pkgdesc = "Web browser"
 license = "BSD-3-Clause"
 url = "https://www.chromium.org"
-source = f"https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/{pkgver}/chromium-{pkgver}-linux.tar.xz"
-sha256 = "6f7fbeaa5ef0b1b4c0ede631edb7365ae48602f587c3c3b65af874922d21a064"
+source = [
+    f"https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/{pkgver}/chromium-{pkgver}-linux.tar.xz",
+    "https://registry.npmjs.org/@rollup/wasm-node/-/wasm-node-4.22.4.tgz",
+]
+source_paths = [".", "rollup"]
+sha256 = [
+    "03b1d2d0a05b9da0e29f9e710ec06f4f829bc2e55dd9e1e6d463a151bddaf5f1",
+    "ee49bf67bd9bee869405af78162d028e2af0fcfca80497404f56b1b99f272717",
+]
 debug_level = 1
 tool_flags = {
     "CFLAGS": [
@@ -154,6 +162,10 @@ tool_flags = {
         "-Wno-deprecated-declarations",
         "-Wno-sign-compare",
         "-Wno-shorten-64-to-32",
+        # started crashing in blink and skia with 145.x due to unsafe memcpy
+        # we have a similar issue in webkit with skia, maybe figure it out
+        # there first...
+        "-U_FORTIFY_SOURCE",
     ],
 }
 file_modes = {
@@ -177,6 +189,11 @@ def post_patch(self):
 
     self.cp(self.files_path / "unbundle.sh", ".")
     self.cp(self.files_path / "pp-data.sh", ".")
+
+    self.rm(
+        "third_party/devtools-frontend/src/node_modules/rollup", recursive=True
+    )
+    self.mv("rollup", "third_party/devtools-frontend/src/node_modules")
 
 
 def configure(self):

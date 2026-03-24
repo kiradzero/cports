@@ -1,5 +1,5 @@
 pkgname = "throne"
-pkgver = "1.0.7"
+pkgver = "1.0.13"
 pkgrel = 0
 build_style = "cmake"
 configure_args = ["-DCMAKE_BUILD_TYPE=Release"]
@@ -20,7 +20,7 @@ pkgdesc = "Cross-platform GUI proxy utility"
 license = "GPL-3.0-or-later"
 url = "https://github.com/throneproj/Throne"
 source = f"{url}/archive/refs/tags/{pkgver}.tar.gz"
-sha256 = "a603b1640b85cbb92f3edadca4d38d545580f0691d760ad7680f6aa6a8cfba57"
+sha256 = "b5abdc6aab685e4433762fdf678ccb6a2e32c31a7f348f486634c6c231de0c7c"
 # no tests
 # cross: needs host protoc/moc
 options = ["!check", "!cross"]
@@ -110,7 +110,7 @@ def post_build(self):
     goenv = golang.get_go_env(self)
 
     # Get sing-box version
-    signboxver = (
+    singboxver = (
         self.do(
             "go",
             "list",
@@ -130,7 +130,7 @@ def post_build(self):
         "-linkmode=external",
         "-w",
         "-s",
-        f"-X github.com/sagernet/sing-box/constant.Version={signboxver}",
+        f"-X github.com/sagernet/sing-box/constant.Version={singboxver}",
     ]
 
     tags = [

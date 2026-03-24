@@ -1,5 +1,5 @@
 pkgname = "plasma-desktop"
-pkgver = "6.5.5"
+pkgver = "6.6.1"
 pkgrel = 0
 build_style = "cmake"
 # XXX drop libexec
@@ -109,7 +109,7 @@ pkgdesc = "KDE Plasma Desktop"
 license = "GPL-2.0-only AND LGPL-2.1-only"
 url = "https://kde.org/plasma-desktop"
 source = f"$(KDE_SITE)/plasma/{pkgver}/plasma-desktop-{pkgver}.tar.xz"
-sha256 = "2367f12531575b2e445cd2b0fa0b756f151f10eaa27358b0966735ff400146c7"
+sha256 = "90f74fcfad764edbd4325b05d542563dde2abbc3fd17f6d16fe9fbc9a6390765"
 hardening = ["vis"]
 
 # most kdepim stuff depends on messagelib which depends on qtwebengine
@@ -158,16 +158,17 @@ def _(self):
         "plasma-browser-integration",  # browser integration with plasma
         "plasma-disks",  # smart monitoring
         "plasma-firewall",  # firewall configuration
+        "plasma-keyboard",  # on-screen keybord
         "plasma-thunderbolt",  # user device authentication
         "print-manager",  # printer configuration
+        "qrca",  # QR scan wifi
         "svgpart",  # svg renderer kpart plugin
-        "xwaylandvideobridge",  # x11 screen capture compat under wayland, TODO: test on baremetal
         # non-kde, misc integrations
         "desktop-file-utils",
         "fprintd-meta",
         "iio-sensor-proxy-meta",  # tablet/convertible auto-rotate etc.
-        "maliit-keyboard",  # on-screen keyboard
         "power-profiles-daemon-meta",  # battery power saving
+        "xdg-desktop-portal-gtk",  # flatpak gtk font sync
     ]
     self.options = ["empty"]
 
@@ -180,7 +181,6 @@ def _(self):
     self.depends = [
         "kgamma",  # monitor gamma settings
         "plasma-workspace-x11",  # xsession
-        "qt6-qtvirtualkeyboard",  # lockscreen virtual keyboard, any alternative that's also usable on wayland side (too?) -> maliit
         "setxkbmap",  # configure non-us layout
         "wacomtablet",  # wacom tablet settings
         # "xserver-xorg-input-evdev",  # TODO: used by mouse KCM? page loads even without it at least

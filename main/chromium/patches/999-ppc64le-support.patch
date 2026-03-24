@@ -1018,7 +1018,7 @@ diff --git a/sandbox/linux/system_headers/linux_stat.h b/sandbox/linux/system_he
 index 3aae8cb..6a78036 100644
 --- a/sandbox/linux/system_headers/linux_stat.h
 +++ b/sandbox/linux/system_headers/linux_stat.h
-@@ -173,6 +173,28 @@ struct kernel_stat {
+@@ -173,6 +173,29 @@ struct kernel_stat {
    unsigned int __unused4;
    unsigned int __unused5;
  };
@@ -1030,6 +1030,7 @@ index 3aae8cb..6a78036 100644
 +  unsigned int	st_mode;
 +  unsigned int	st_uid;
 +  unsigned int	st_gid;
++  unsigned int	__pad0;
 +  unsigned long	st_rdev;
 +  long		st_size;
 +  unsigned long	st_blksize;
@@ -1577,7 +1578,7 @@ index 93dae35..1e3f08a 100644
  #else
      UContextReader::FillCPUContext(&cpu, ucontext_);
 @@ -616,7 +622,9 @@ class MicrodumpWriter {
-   void* Alloc(unsigned bytes) { return dumper_->allocator()->Alloc(bytes); }
+   }
  
    const ucontext_t* const ucontext_;
 -#if GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
@@ -3656,7 +3657,7 @@ index 87b2129..d5a6eca 100644
 +        "-mvsx",
 +      ]
 +    }
-     if (current_os == "aix") {
+     if (current_os == "aix" && !is_clang) {
        cflags += [
          # Work around AIX ceil, trunc and round oddities.
 diff --git a/v8/test/BUILD.gn b/v8/test/BUILD.gn

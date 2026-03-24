@@ -1,5 +1,5 @@
 pkgname = "powerdevil"
-pkgver = "6.5.5"
+pkgver = "6.6.1"
 pkgrel = 0
 build_style = "cmake"
 # XXX drop libexec
@@ -60,7 +60,7 @@ pkgdesc = "KDE Plasma shell power consumption settings manager"
 license = "GPL-2.0-or-later AND LGPL-2.0-or-later"
 url = "https://invent.kde.org/plasma/powerdevil"
 source = f"$(KDE_SITE)/plasma/{pkgver}/powerdevil-{pkgver}.tar.xz"
-sha256 = "1f67c14d05df9cdf86571dd86c33ad91e855e5595cabab7f42289bf7e35ebfe4"
+sha256 = "18729609612956fb51f41c13ca8afd46fa1e46ade1184433d31e576866630403"
 file_modes = {
     "usr/lib/org_kde_powerdevil": ("root", "root", 0o755),
 }
