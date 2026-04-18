@@ -1,6 +1,6 @@
 pkgname = "chromium"
 # https://chromiumdash.appspot.com/releases?platform=Linux
-pkgver = "146.0.7680.153"
+pkgver = "147.0.7727.101"
 pkgrel = 0
 archs = ["aarch64", "ppc64le", "x86_64"]
 configure_args = [
@@ -144,7 +144,7 @@ source = [
 ]
 source_paths = [".", "rollup"]
 sha256 = [
-    "03b1d2d0a05b9da0e29f9e710ec06f4f829bc2e55dd9e1e6d463a151bddaf5f1",
+    "362b6b21748dc6983157d80ceb601c070c0324073c3b311ba67f32cb36b17532",
     "ee49bf67bd9bee869405af78162d028e2af0fcfca80497404f56b1b99f272717",
 ]
 debug_level = 1
@@ -162,10 +162,6 @@ tool_flags = {
         "-Wno-deprecated-declarations",
         "-Wno-sign-compare",
         "-Wno-shorten-64-to-32",
-        # started crashing in blink and skia with 145.x due to unsafe memcpy
-        # we have a similar issue in webkit with skia, maybe figure it out
-        # there first...
-        "-U_FORTIFY_SOURCE",
     ],
 }
 file_modes = {
