@@ -1,5 +1,5 @@
 pkgname = "openvpn"
-pkgver = "2.7.0"
+pkgver = "2.7.4"
 pkgrel = 0
 build_style = "gnu_configure"
 configure_args = [
@@ -36,7 +36,7 @@ url = "https://openvpn.net"
 source = (
     f"https://github.com/OpenVPN/openvpn/archive/refs/tags/v{pkgver}.tar.gz"
 )
-sha256 = "23af3dd1a76736d542f0fded4f81fdf14e27bdf7203e4ee29e9440d87e3c4209"
+sha256 = "2235b8479b4fca0c43a8cd6a767858ab5b1e14cb4170e6211aa94549ed5d419e"
 
 
 def post_install(self):
