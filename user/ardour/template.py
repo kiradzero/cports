@@ -1,6 +1,6 @@
 pkgname = "ardour"
 pkgver = "9.2.0"
-pkgrel = 0
+pkgrel = 2
 build_style = "waf"
 configure_args = [
     "--configdir=/etc",
@@ -54,14 +54,15 @@ license = "GPL-2.0-or-later AND CC0-1.0 AND MIT"
 url = "https://ardour.org"
 source = f"https://community.ardour.org/src/Ardour-{pkgver}.tar.bz2"
 sha256 = "cbff58fda4a2c673ebb39b80cffa994c2520a352f7505d919d5783aa0df6d314"
+tool_flags = {"LDFLAGS": ["-Wl,-z,stack-size=0x200000"]}
 hardening = ["!int"]
 # bundled stuff
 options = ["!cross", "!scanshlibs"]
 exec_wrappers = [("/usr/bin/clang-cpp", "cpp")]
 
 
-if self.profile().arch in ["ppc64le", "ppc64", "ppc"]:
-    broken = "needs sys/platform/ppc.h"
+if self.profile().endian == "big":
+    broken = "busted audio stuff"
 
 
 def check(self):
