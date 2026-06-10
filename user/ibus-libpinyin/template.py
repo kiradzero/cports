@@ -1,6 +1,6 @@
 pkgname = "ibus-libpinyin"
 pkgver = "1.16.5"
-pkgrel = 2
+pkgrel = 4
 build_style = "gnu_configure"
 configure_args = [
     "--enable-cloud-input-mode",

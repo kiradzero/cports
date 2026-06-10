@@ -1,6 +1,6 @@
 pkgname = "yggdrasil"
 pkgver = "0.5.13"
-pkgrel = 2
+pkgrel = 3
 build_style = "go"
 make_build_args = [
     "-ldflags="
@@ -31,5 +31,5 @@ def post_install(self):
     )
     self.install_service(self.files_path / "yggdrasil")
     self.install_file(
-        self.files_path / "yggdrasil.wrapper", "usr/libexec", mode=0o755
+        self.files_path / "yggdrasil.wrapper", "usr/lib", mode=0o755
     )

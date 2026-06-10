@@ -1,10 +1,8 @@
 pkgname = "xapp"
 pkgver = "3.0.1"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
-# XXX: drop libexec
 configure_args = [
-    "--libexecdir=/usr/lib",
     "-Ddocs=true",
     "-Ddebian_derivative=true",
 ]

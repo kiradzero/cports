@@ -1,8 +1,11 @@
 pkgname = "networkmanager-openconnect"
 pkgver = "1.2.10"
-pkgrel = 1
+pkgrel = 2
 build_style = "gnu_configure"
-configure_args = ["--with-gtk4=yes", "--disable-static"]
+configure_args = [
+    "--with-gtk4=yes",
+    "--disable-static",
+]
 make_dir = "."
 hostmakedepends = [
     "automake",

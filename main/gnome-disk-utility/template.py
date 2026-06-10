@@ -1,8 +1,10 @@
 pkgname = "gnome-disk-utility"
 pkgver = "46.1"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
-configure_args = ["-Dlogind=libelogind"]
+configure_args = [
+    "-Dlogind=libelogind",
+]
 hostmakedepends = [
     "desktop-file-utils",
     "docbook-xsl-nons",

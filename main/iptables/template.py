@@ -62,8 +62,8 @@ def post_install(self):
     fpath = self.files_path
 
     # service-related bits
-    self.install_file(fpath / "iptables-flush", "usr/libexec", mode=0o755)
-    self.install_file(fpath / "iptables-start", "usr/libexec", mode=0o755)
+    self.install_file(fpath / "iptables-flush", "usr/lib", mode=0o755)
+    self.install_file(fpath / "iptables-start", "usr/lib", mode=0o755)
     self.install_service(self.files_path / "iptables")
     self.install_service(self.files_path / "ip6tables")
     self.install_tmpfiles(self.files_path / "tmpfiles.conf")

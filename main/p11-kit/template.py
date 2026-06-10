@@ -1,6 +1,6 @@
 pkgname = "p11-kit"
 pkgver = "0.25.10"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
 configure_args = [
     "-Dlibffi=enabled",

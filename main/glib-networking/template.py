@@ -1,6 +1,6 @@
 pkgname = "glib-networking"
 pkgver = "2.80.1"
-pkgrel = 1
+pkgrel = 2
 build_style = "meson"
 configure_args = [
     "-Dgnutls=enabled",

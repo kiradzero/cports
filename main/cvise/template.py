@@ -1,6 +1,6 @@
 pkgname = "cvise"
 pkgver = "2.12.0"
-pkgrel = 1
+pkgrel = 2
 build_style = "cmake"
 hostmakedepends = [
     "cmake",

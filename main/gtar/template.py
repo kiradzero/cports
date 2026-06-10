@@ -1,6 +1,6 @@
 pkgname = "gtar"
 pkgver = "1.35"
-pkgrel = 0
+pkgrel = 1
 build_style = "gnu_configure"
 configure_args = [
     "--program-prefix=g",
@@ -8,7 +8,7 @@ configure_args = [
 ]
 configure_gen = []
 hostmakedepends = ["texinfo"]
-makedepends = ["acl-devel"]
+makedepends = ["acl-devel", "linux-headers"]
 pkgdesc = "GNU tape archiver"
 license = "GPL-3.0-or-later"
 url = "http://www.gnu.org/software/tar"

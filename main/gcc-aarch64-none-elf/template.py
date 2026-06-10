@@ -1,16 +1,11 @@
 pkgname = "gcc-aarch64-none-elf"
 _trip = pkgname.removeprefix("gcc-")
-pkgver = "15.2.0"
+pkgver = "16.1.0"
 pkgrel = 0
 build_style = "gnu_configure"
 configure_args = [
     f"--target={_trip}",
     f"--with-sysroot=/usr/{_trip}",
-    "--prefix=/usr",
-    "--sbindir=/usr/bin",
-    "--libdir=/usr/lib",
-    "--mandir=/usr/share/man",
-    "--infodir=/usr/share/info",
     "--disable-nls",
     "--disable-decimal-float",
     "--disable-libffi",
@@ -60,7 +55,7 @@ pkgdesc = "GNU C compiler for ARM bare metal targets"
 license = "GPL-3.0-or-later"
 url = "https://gcc.gnu.org"
 source = f"$(GNU_SITE)/gcc/gcc-{pkgver}/gcc-{pkgver}.tar.xz"
-sha256 = "438fd996826b0c82485a29da03a72d71d6e3541a83ec702df4271f6fe025d24e"
+sha256 = "50efb4d94c3397aff3b0d61a5abd748b4dd31d9d3f2ab7be05b171d36a510f79"
 env = {
     "CFLAGS_FOR_TARGET": "-g -Os -ffunction-sections -fdata-sections",
     "CXXFLAGS_FOR_TARGET": "-g -Os -ffunction-sections -fdata-sections",

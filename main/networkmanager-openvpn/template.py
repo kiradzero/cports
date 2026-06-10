@@ -1,6 +1,6 @@
 pkgname = "networkmanager-openvpn"
 pkgver = "1.12.5"
-pkgrel = 0
+pkgrel = 1
 build_style = "gnu_configure"
 configure_args = [
     "--disable-static",

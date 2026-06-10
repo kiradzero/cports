@@ -1,6 +1,6 @@
 pkgname = "rsync"
 pkgver = "3.4.1"
-pkgrel = 0
+pkgrel = 1
 build_style = "gnu_configure"
 configure_args = [
     "--with-rrsync",
@@ -47,7 +47,7 @@ def post_extract(self):
 def post_install(self):
     self.install_file(self.files_path / "rsyncd.conf", "etc")
     self.install_file(
-        self.files_path / "rsyncd.sh", "usr/libexec", mode=0o755, name="rsyncd"
+        self.files_path / "rsyncd.sh", "usr/lib", mode=0o755, name="rsyncd"
     )
     self.install_service(self.files_path / "rsyncd")
 

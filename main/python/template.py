@@ -1,5 +1,5 @@
 pkgname = "python"
-pkgver = "3.13.9"
+pkgver = "3.14.5"
 _majver = pkgver[: pkgver.rfind(".")]
 pkgrel = 0
 build_style = "gnu_configure"
@@ -29,7 +29,6 @@ make_check_args = [
     + "-i test_readline "
     + "-i test_threading "
     + "-i test_unicodedata "
-    + "-i test_urllib2net "  # just loops blocked connection failures into success
     + "-i test_tools "
     + "-i test_timeout "  # ??? env changed
     + "-i test_functools "  # ppc64le stack overflow
@@ -37,8 +36,12 @@ make_check_args = [
     + "-i test_pickle "  # ppc64le stack overflow
     + "-i test_pickletools "  # ppc64le stack overflow
     + "-i test_pgo_exclude "  # seems harmless?
-    + "-i test_sysconfig "  # temporary until fix-mach.patch is gone
+    + "-i test_bang_completion_without_do_shell "  # dislikes our libedit
     + "-i test.test_strptime.StrptimeTests.test_date_locale2 "
+    # these need net
+    + "-i test_urllib2 "
+    + "-i test_urllibnet "
+    + "-i test_urllib2net "
 ]
 hostmakedepends = [
     "autoconf-archive",
@@ -65,7 +68,7 @@ pkgdesc = "Python programming language"
 license = "Python-2.0"
 url = "https://python.org"
 source = f"https://python.org/ftp/python/{pkgver}/Python-{pkgver}.tar.xz"
-sha256 = "ed5ef34cda36cfa2f3a340f07cac7e7814f91c7f3c411f6d3562323a866c5c66"
+sha256 = "7e32597b99e5d9a39abed35de4693fa169df3e5850d4c334337ffd6a19a36db6"
 # use a chunky stack; python by default does not use more than 1 thread
 # but anything dlopened from it will be stuck with the default stacksize
 # (e.g. python gtk programs, gtk loads icons from a threadpool and it may
@@ -89,10 +92,18 @@ if self.profile().cross:
     hostmakedepends += ["python"]
     configure_args += [f"--with-build-python=python{_majver}"]
 
+_has_tail = True
+
+match self.profile().arch:
+    case "ppc" | "ppc64" | "ppc64le":
+        _has_tail = False
+
 
 def init_configure(self):
     if not self.profile().cross and self.has_lto():
-        self.configure_args.append("--enable-optimizations")
+        self.configure_args += ["--enable-optimizations"]
+        if _has_tail:
+            self.configure_args += ["--with-tail-call-interp"]
     bigend = "yes" if (self.profile().endian == "big") else "no"
     self.configure_args.append("ax_cv_c_float_words_bigendian=" + bigend)
     # real configure and linker flags here

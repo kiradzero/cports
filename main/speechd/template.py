@@ -1,9 +1,8 @@
 pkgname = "speechd"
 pkgver = "0.12.1"
-pkgrel = 0
+pkgrel = 1
 build_style = "gnu_configure"
 configure_args = [
-    "--libexecdir=/usr/lib",  # XXX drop libexec
     "--disable-static",
     "--with-espeak-ng",
     "--without-baratinoo",

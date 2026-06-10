@@ -1,8 +1,11 @@
 pkgname = "mc"
 pkgver = "4.8.33"
-pkgrel = 1
+pkgrel = 2
 build_style = "gnu_configure"
-configure_args = ["--with-screen=ncurses", "--without-x"]
+configure_args = [
+    "--with-screen=ncurses",
+    "--without-x",
+]
 configure_gen = []  # broken m4
 hostmakedepends = ["pkgconf", "perl"]
 makedepends = [

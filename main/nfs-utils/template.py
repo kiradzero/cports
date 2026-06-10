@@ -1,6 +1,6 @@
 pkgname = "nfs-utils"
 pkgver = "2.8.2"
-pkgrel = 2
+pkgrel = 3
 build_style = "gnu_configure"
 configure_args = [
     "--disable-sbin-override",
@@ -31,6 +31,7 @@ makedepends = [
     "linux-headers",
     "lvm2-devel",
     "musl-bsd-headers",
+    "rpcbind",
     "sqlite-devel",
     "util-linux-mount-devel",
 ]
@@ -50,9 +51,7 @@ options = ["!check"]
 def post_install(self):
     # helpers
     for n in ["nfs-server", "proc-fs-nfsd", "rpc_pipefs"]:
-        self.install_file(
-            self.files_path / f"dinit-{n}", "usr/libexec", mode=0o755
-        )
+        self.install_file(self.files_path / f"dinit-{n}", "usr/lib", mode=0o755)
     # services
     for srv in [
         "blkmapd",
@@ -103,8 +102,8 @@ def _(self):
         "usr/lib/dinit.d/nfsdcld",
         "usr/lib/dinit.d/rpc.mountd",
         "usr/lib/dinit.d/rpc.svcgssd",
-        "usr/libexec/dinit-nfs-server",
-        "usr/libexec/dinit-proc-fs-nfsd",
+        "usr/lib/dinit-nfs-server",
+        "usr/lib/dinit-proc-fs-nfsd",
         "usr/share/man/man5/exports.5",
         "usr/share/man/man8/nfsdcld.8",
         "usr/share/man/man8/*mountd.8",

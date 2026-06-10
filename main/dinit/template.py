@@ -1,22 +1,21 @@
 pkgname = "dinit"
-pkgver = "0.19.3"
-# temporary so we get our features
-_gitrev = "712e1faa6e2faeb4e56d925334266976904096e9"
+pkgver = "0.22.0"
 pkgrel = 0
 build_style = "configure"
 configure_args = [
+    "--disable-strip",
+    "--enable-shutdown",
+    "--platform=Linux",
     "--sbindir=/usr/bin",
     "--syscontrolsocket=/run/dinitctl",
-    "LDFLAGS_EXTRA=-lcap",
-    "TEST_LDFLAGS_EXTRA=-lcap",
 ]
 make_check_args = ["check-igr"]  # additional target
 makedepends = ["libcap-devel"]
 pkgdesc = "Service manager and init system"
 license = "Apache-2.0"
 url = "https://davmac.org/projects/dinit"
-source = f"https://github.com/davmac314/dinit/archive/{_gitrev}.tar.gz"
-sha256 = "a1595c201ccaaa1af509221eefd20f8abd3f4a00c50e2184851e2fba606b53fb"
+source = f"https://github.com/davmac314/dinit/archive/v{pkgver}.tar.gz"
+sha256 = "926d431e1c596a214612a1fc31c66fc0356630c5759edc313fe7153eaf462ffc"
 # hand-rolled configure scripts/makefiles lol
 tool_flags = {"CXXFLAGS": ["-fno-rtti"]}
 hardening = ["vis", "cfi"]

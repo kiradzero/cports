@@ -1,8 +1,10 @@
 pkgname = "libayatana-indicator"
 pkgver = "0.9.4"
-pkgrel = 1
+pkgrel = 2
 build_style = "cmake"
-configure_args = ["-DENABLE_TESTS=ON"]
+configure_args = [
+    "-DENABLE_TESTS=ON",
+]
 # Tests run xvfb-run on their own but that fails for some reason
 make_check_wrapper = ["xvfb-run"]
 hostmakedepends = ["cmake", "ninja", "pkgconf"]

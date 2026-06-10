@@ -1,8 +1,10 @@
 pkgname = "gparted"
 pkgver = "1.8.1"
-pkgrel = 0
+pkgrel = 1
 build_style = "gnu_configure"
-configure_args = ["--enable-libparted-dmraid"]
+configure_args = [
+    "--enable-libparted-dmraid",
+]
 hostmakedepends = [
     "automake",
     "gettext-devel",

@@ -1,13 +1,12 @@
 # TODO: service files, cleanup
 pkgname = "samba"
 pkgver = "4.23.3"
-pkgrel = 2
+pkgrel = 3
 build_style = "waf"
 configure_script = "buildtools/bin/waf"
 configure_args = [
     "--enable-fhs",
     "--sbindir=/usr/bin",
-    "--libexecdir=/usr/lib",  # XXX drop libexec
     "--localstatedir=/var",
     "--sysconfdir=/etc",
     "--with-piddir=/run/samba",

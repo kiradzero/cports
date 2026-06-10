@@ -1,8 +1,10 @@
 pkgname = "libmbim"
 pkgver = "1.32.0"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
-configure_args = ["-Dintrospection=true"]
+configure_args = [
+    "-Dintrospection=true",
+]
 hostmakedepends = [
     "bash-completion",
     "glib-devel",

@@ -1,6 +1,6 @@
 pkgname = "geoclue"
 pkgver = "2.8.1"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
 configure_args = [
     "-Ddbus-srv-user=_geoclue",

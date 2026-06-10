@@ -1,6 +1,6 @@
 pkgname = "mate-polkit"
 pkgver = "1.28.1"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
 hostmakedepends = [
     "gettext",

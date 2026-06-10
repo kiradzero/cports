@@ -1,9 +1,8 @@
 pkgname = "libinput"
 pkgver = "1.31.2"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
 configure_args = [
-    "--libexecdir=/usr/lib",  # XXX drop libexec
     "-Ddocumentation=false",
     "-Dtests=true",
     "-Ddebug-gui=false",
