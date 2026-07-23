@@ -1,0 +1,15 @@
+Chimera uses libc++ with compiler-rt + libunwind and has no libgcc_s, so the
+hardcoded --unwindlib=libgcc makes the final librocsolver.so link fail with
+"unable to find library -lgcc_s". Match the runtime to libunwind.
+
+--- a/library/src/CMakeLists.txt
++++ b/library/src/CMakeLists.txt
+@@ -402,7 +402,7 @@
+     $<BUILD_INTERFACE:rocsolver-common> # https://gitlab.kitware.com/cmake/cmake/-/issues/15415
+     roc::rocprim
+     $<$<PLATFORM_ID:Linux>:--rtlib=compiler-rt>
+-    $<$<PLATFORM_ID:Linux>:--unwindlib=libgcc>
++    $<$<PLATFORM_ID:Linux>:--unwindlib=libunwind>
+ )
+ if(NOT USE_HIPCXX)
+   target_link_libraries(rocsolver PRIVATE hip::device)

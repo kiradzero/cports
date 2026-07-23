@@ -1,0 +1,27 @@
+--- a/intern/cycles/util/stack_allocator.h
++++ b/intern/cycles/util/stack_allocator.h
+@@ -41,7 +41,14 @@
+     if (n == 0) {
+       return nullptr;
+     }
+-    if (pointer_ + n >= SIZE || use_stack_ == false) {
++    /* The in-object stack buffer is only sound if the container never
++     * copies or replaces its allocator. The allocator requirements let it
++     * do both (copies must be interchangeable, which operator== here
++     * promises), and libc++, unlike libstdc++, exercises that right when
++     * growing a vector: blocks handed out from a since-destroyed copy's
++     * buffer are left dangling. Always allocate from the heap instead,
++     * which makes copies genuinely interchangeable. */
++    if (true) {
+       size_t size = n * sizeof(T);
+       util_guarded_mem_alloc(size);
+       T *mem;
+@@ -65,7 +72,7 @@
+     if (p == nullptr) {
+       return;
+     }
+-    if (p < data_ || p >= data_ + SIZE) {
++    if (true) {
+       util_guarded_mem_free(n * sizeof(T));
+ #ifdef WITH_BLENDER_GUARDEDALLOC
+       MEM_delete_void(static_cast<void *>(p));

@@ -1,0 +1,13 @@
+Add missing symbol exports to the version script.
+https://github.com/ROCm/rocm-systems/issues/284
+--- a/libhsakmt/src/libhsakmt.ver
++++ b/libhsakmt/src/libhsakmt.ver
+@@ -90,5 +90,8 @@
+ hsaKmtPcSamplingStop;
+ hsaKmtPcSamplingSupport;
+ hsaKmtAisReadWriteFile;
++hsaKmtCreateQueueExt;
++hsaKmtRegisterGraphicsHandleToNodesExt;
++hsaKmtModelEnabled;
+ local: *;
+ };

@@ -1,0 +1,24 @@
+CppHeaderParser (robotpy fork) chokes on preprocessor linemarkers
+inside enum bodies; strip them with -P, the .i files are only parsed
+for API signatures.
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -65,7 +65,7 @@
+ add_custom_command(
+   OUTPUT hsa_ostream_ops.h
+-  COMMAND ${CMAKE_C_COMPILER} -E "${HSA_RUNTIME_INC_PATH}/hsa.h" -o hsa.h.i
+-  COMMAND ${CMAKE_C_COMPILER} -E "${HSA_RUNTIME_INC_PATH}/hsa_ext_amd.h" -o hsa_ext_amd.h.i
++  COMMAND ${CMAKE_C_COMPILER} -E -P "${HSA_RUNTIME_INC_PATH}/hsa.h" -o hsa.h.i
++  COMMAND ${CMAKE_C_COMPILER} -E -P "${HSA_RUNTIME_INC_PATH}/hsa_ext_amd.h" -o hsa_ext_amd.h.i
+   BYPRODUCTS hsa.h.i hsa_ext_amd.h.i
+   COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/script/gen_ostream_ops.py
+           -in hsa.h.i,hsa_ext_amd.h.i -out hsa_ostream_ops.h  > /dev/null
+@@ -85,5 +85,5 @@
+   OUTPUT hip_ostream_ops.h
+   COMMAND ${CMAKE_C_COMPILER} "$<$<BOOL:${HIP_INCLUDE_DIRECTORIES}>:-I$<JOIN:${HIP_INCLUDE_DIRECTORIES},$<SEMICOLON>-I>>"
+-          -E "${CMAKE_CURRENT_SOURCE_DIR}/roctracer/hip_full_api.h" -D__HIP_PLATFORM_AMD__=1 -D__HIP_ROCclr__=1 -o hip_runtime_api.h.i
++          -E -P "${CMAKE_CURRENT_SOURCE_DIR}/roctracer/hip_full_api.h" -D__HIP_PLATFORM_AMD__=1 -D__HIP_ROCclr__=1 -o hip_runtime_api.h.i
+   BYPRODUCTS hip_runtime_api.h.i
+   COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/script/gen_ostream_ops.py

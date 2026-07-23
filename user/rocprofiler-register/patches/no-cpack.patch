@@ -1,0 +1,46 @@
+cpack_add_component_group requires include(CPackComponent) which is no
+longer implicit with cmake 4.x; we don't ship cpack packages anyway.
+Also make system fmt/glog imported targets global, and drop the
+-lstdc++fs fallback (libc++ has filesystem built in).
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -112,7 +112,5 @@
+ if(ROCPROFILER_REGISTER_BUILD_SAMPLES)
+     add_subdirectory(samples)
+ endif()
+ 
+-include(rocprofiler_register_config_packaging)
+-
+ rocprofiler_register_print_features()
+diff --git a/external/CMakeLists.txt b/external/CMakeLists.txt
+--- a/external/CMakeLists.txt
++++ b/external/CMakeLists.txt
+@@ -18,7 +18,7 @@
+     set(WITH_UNWIND "none")
+     add_subdirectory(glog EXCLUDE_FROM_ALL)
+ else()
+-    find_package(glog REQUIRED)
++    find_package(glog REQUIRED GLOBAL)
+ endif()
+ 
+ if(ROCPROFILER_REGISTER_BUILD_FMT)
+@@ -33,5 +33,5 @@
+     set(FMT_TEST OFF)
+     add_subdirectory(fmt EXCLUDE_FROM_ALL)
+ else()
+-    find_package(fmt REQUIRED)
++    find_package(fmt REQUIRED GLOBAL)
+ endif()
+diff --git a/cmake/rocprofiler_register_config_interfaces.cmake b/cmake/rocprofiler_register_config_interfaces.cmake
+--- a/cmake/rocprofiler_register_config_interfaces.cmake
++++ b/cmake/rocprofiler_register_config_interfaces.cmake
+@@ -61,7 +61,4 @@
+ if(stdcxxfs_LIBRARY)
+     target_link_libraries(rocprofiler-register-stdcxxfs
+                           INTERFACE $<BUILD_INTERFACE:${stdcxxfs_LIBRARY}>)
+-else()
+-    target_link_libraries(rocprofiler-register-stdcxxfs
+-                          INTERFACE $<BUILD_INTERFACE:stdc++fs>)
+ endif()

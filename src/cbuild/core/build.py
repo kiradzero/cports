@@ -548,6 +548,7 @@ def build(
     depmap,
     chost=False,
     dirty=False,
+    resume=False,
     keep_temp=False,
     check_fail=False,
     no_update=False,
@@ -563,6 +564,7 @@ def build(
             depmap,
             chost,
             dirty,
+            resume,
             keep_temp,
             check_fail,
             no_update,
@@ -583,6 +585,7 @@ def _build(
     depmap,
     chost,
     dirty,
+    resume,
     keep_temp,
     check_fail,
     no_update,
@@ -623,7 +626,12 @@ def _build(
     # always clean up before starting, unless exlpicitly requested not to
     # or unless bootstrapping stage 0 (as resumption is useful by default
     # in there) but not any other stage
-    if not dirty and pkg.stage > 0:
+    #
+    # --resume (opt_resume) keeps the build/dest/state dirs so an
+    # interrupted build continues from the last completed phase (and ninja
+    # reuses already-compiled objects), without --dirty-build's side effect
+    # of skipping dependency install/removal
+    if not dirty and not resume and pkg.stage > 0:
         # clean up old state
         pkgm.remove_pkg_wrksrc(pkg)
         pkgm.remove_pkg(pkg)

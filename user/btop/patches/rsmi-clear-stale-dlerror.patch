@@ -1,0 +1,17 @@
+Clear stale dlerror() left by failed dlopen() candidates before probing
+symbols; musl keeps the error until read, so the rsmi_init dlsym() check
+false-fails and AMD GPU monitoring never initializes.
+--
+--- a/src/linux/btop_collect.cpp
++++ b/src/linux/btop_collect.cpp
+@@ -1559,6 +1559,10 @@
+ 			if (!rsmi_dl_handle) {
+ 				Logger::info("Failed to load librocm_smi64.so, AMD GPUs will not be detected: {}", dlerror());
+ 				return false;
+ 			}
+ 
++			//? Clear any stale error from the failed dlopen attempts above,
++			//? as musl keeps it until dlerror() is called
++			dlerror();
++
+ 			auto load_rsmi_sym = [&](const char sym_name[]) {

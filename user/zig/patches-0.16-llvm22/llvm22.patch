@@ -1,0 +1,13 @@
+accept system LLVM 22 (upstream pins exactly 21.x)
+
+--- a/cmake/Findllvm.cmake
++++ b/cmake/Findllvm.cmake
+@@ -40,7 +40,7 @@
+       OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+     get_filename_component(LLVM_CONFIG_DIR "${LLVM_CONFIG_EXE}" DIRECTORY)
+-    if("${LLVM_CONFIG_VERSION}" VERSION_LESS 21 OR "${LLVM_CONFIG_VERSION}" VERSION_EQUAL 22 OR "${LLVM_CONFIG_VERSION}" VERSION_GREATER 22)
++    if("${LLVM_CONFIG_VERSION}" VERSION_LESS 21 OR "${LLVM_CONFIG_VERSION}" VERSION_EQUAL 23 OR "${LLVM_CONFIG_VERSION}" VERSION_GREATER 23)
+       # Save the error message, in case this is the last llvm-config we find
+       list(APPEND LLVM_CONFIG_ERROR_MESSAGES "expected LLVM 21.x but found ${LLVM_CONFIG_VERSION} using ${LLVM_CONFIG_EXE}")
+

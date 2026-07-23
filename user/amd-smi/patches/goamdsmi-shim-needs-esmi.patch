@@ -1,0 +1,23 @@
+The goamdsmi_shim Go-binding shim unconditionally calls CPU/ESMI-only APIs
+(amdsmi_get_cpu_*, amdsmi_get_threads_per_core, amdsmi_get_processor_handles_by_type)
+which are #ifdef ENABLE_ESMI_LIB in amdsmi.h. With ESMI disabled (EPYC-only,
+and it git-clones at configure) the shim fails to compile. Gate it on ESMI.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 444ec4e..2958abb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -374,8 +374,12 @@ install(
+     PATTERN "build*" EXCLUDE
+     PATTERN ".cache*" EXCLUDE)
+ 
+-# Make for goamdsmi_shim library
++# Make for goamdsmi_shim library -- the Go shim calls CPU/ESMI-only APIs
++# (amdsmi_get_cpu_*, amdsmi_get_threads_per_core, ...) that are #ifdef
++# ENABLE_ESMI_LIB in amdsmi.h, so it only compiles when ESMI is built
++if(ENABLE_ESMI_LIB)
+ add_subdirectory(goamdsmi_shim)
++endif()
+ 
+ #Debian package specific variables
+ set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "python3-argcomplete, libdrm-dev, libdrm-amdgpu-dev")

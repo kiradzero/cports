@@ -35,6 +35,7 @@ opt_mdirtemp = False
 opt_nonet = False
 opt_forcenet = False
 opt_dirty = False
+opt_resume = False
 opt_keeptemp = False
 opt_forcecheck = False
 opt_checkfail = False
@@ -117,7 +118,7 @@ def handle_options():
     global opt_harch, opt_gen_dbg, opt_check, opt_ccache, opt_tltocachesize
     global opt_sccache, opt_makejobs, opt_lthreads, opt_nocolor, opt_signkey
     global opt_force, opt_mdirtemp, opt_allowcat, opt_restricted
-    global opt_nonet, opt_forcenet, opt_dirty, opt_statusfd, opt_keeptemp, opt_forcecheck
+    global opt_nonet, opt_forcenet, opt_dirty, opt_resume, opt_statusfd, opt_keeptemp, opt_forcecheck
     global opt_checkfail, opt_stage, opt_altrepo, opt_stagepath, opt_bldroot
     global opt_blddir, opt_pkgpath, opt_srcpath, opt_cchpath, opt_updatecheck
     global opt_acceptsum, opt_comp, opt_maint, opt_epkgs, opt_tdata, opt_nolock
@@ -264,6 +265,14 @@ def handle_options():
         help="Skip installing (and removing) dependencies.",
     )
     parser.add_argument(
+        "--resume",
+        action="store_const",
+        const=True,
+        default=opt_resume,
+        help="Resume an interrupted build from the last completed phase "
+        "(keep build/dest dirs; unlike -D, still manages dependencies).",
+    )
+    parser.add_argument(
         "-K",
         "--keep-temporary",
         action="store_const",
@@ -393,12 +402,9 @@ def handle_options():
             "allow_restricted", fallback=opt_restricted
         )
         opt_nonet = not bcfg.getboolean("remote", fallback=not opt_nonet)
-<<<<<<< HEAD
         opt_forcenet = bcfg.getboolean("force_network", fallback=opt_forcenet)
-=======
         opt_linter = bcfg.get("linter", fallback=opt_linter).strip()
         opt_formatter = bcfg.get("formatter", fallback=opt_formatter).strip()
->>>>>>> 17e3b24b979a175d949dea7902b59b888ee5585c
 
     if "flags" not in global_cfg:
         global_cfg["flags"] = {}
@@ -479,6 +485,9 @@ def handle_options():
 
     if cmdline.dirty_build:
         opt_dirty = True
+
+    if cmdline.resume:
+        opt_resume = True
 
     if cmdline.keep_temporary:
         opt_keeptemp = True
@@ -1862,6 +1871,7 @@ def do_pkg(tgt, pkgn=None, force=None, check=None, stage=None):
         rp,
         {},
         dirty=opt_dirty,
+        resume=opt_resume,
         keep_temp=opt_keeptemp,
         check_fail=opt_checkfail,
         update_check=opt_updatecheck,

@@ -1,6 +1,6 @@
 pkgname = "zstd"
 pkgver = "1.5.7"
-pkgrel = 0
+pkgrel = 1
 build_style = "meson"
 configure_args = [
     "-Db_ndebug=true",
@@ -20,8 +20,16 @@ license = "BSD-3-Clause"
 url = "http://www.zstd.net"
 source = f"https://github.com/facebook/zstd/releases/download/v{pkgver}/zstd-{pkgver}.tar.gz"
 sha256 = "eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3"
+# local znver4 tuning, harmless no-op if ever cross-built for another target
+tool_flags = (
+    {"CFLAGS": ["-march=znver4"], "CXXFLAGS": ["-march=znver4"]}
+    if self.profile().arch == "x86_64"
+    else {}
+)
 compression = "deflate"
 hardening = ["!vis", "!cfi"]
+# I'm lazy
+options = ["!check"]
 
 
 def post_install(self):

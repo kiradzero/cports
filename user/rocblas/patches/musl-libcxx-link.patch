@@ -1,0 +1,14 @@
+On Chimera (libc++ + compiler-rt) the C++17 filesystem lives in libc++
+itself, so -lstdc++fs does not exist, and unwinding is provided by
+libunwind, not libgcc.
+
+--- a/library/CMakeLists.txt
++++ b/library/CMakeLists.txt
+@@ -81,6 +81,6 @@
+   if (WIN32)
+     target_link_libraries( ${lib_target_} PRIVATE hip::device )
+   else()
+-    target_link_libraries( ${lib_target_} PRIVATE hip::device -lstdc++fs --rtlib=compiler-rt --unwindlib=libgcc)
++    target_link_libraries( ${lib_target_} PRIVATE hip::device --rtlib=compiler-rt --unwindlib=libunwind)
+
+     if(BUILD_SHARED_LIBS)

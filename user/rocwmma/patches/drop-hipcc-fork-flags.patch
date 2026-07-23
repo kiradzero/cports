@@ -1,0 +1,20 @@
+rocWMMA's CMAKE_CXX_FLAGS carry two AMD hipcc-fork-only clang flags that
+Chimera's system clang 22 rejects, breaking every configure try_compile
+(shown misleadingly as a 'ROCm does not support __hip_fp8' FATAL):
+  -parallel-jobs=N               (multi-arch offload parallelism; we build one arch)
+  -fallow-half-arguments-and-returns  (legacy HCC __half ABI flag, unneeded)
+Drop both.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index be44651..327785d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -54,7 +54,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
+ #Set Clang C++ flags.
+ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O2") # clang++ crashes without -O2
+ set(CMAKE_CXX_FLAGS_MINSIZEREL "-O2 -DNDEBUG") # clang++ failed to build the project with the default -Os
+-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --driver-mode=g++ -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1 -Wno-format-nonliteral -parallel-jobs=4 -fclang-abi-compat=17")
++set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --driver-mode=g++ -D__HIP_HCC_COMPAT_MODE__=1 -Wno-format-nonliteral -fclang-abi-compat=17")
+ 
+ # Top level configs
+ if( CMAKE_PROJECT_NAME STREQUAL "rocwmma" )

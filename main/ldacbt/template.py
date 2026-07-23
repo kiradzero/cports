@@ -1,6 +1,6 @@
 pkgname = "ldacbt"
 pkgver = "2.0.2.3"
-pkgrel = 0
+pkgrel = 1
 build_style = "cmake"
 configure_args = ["-DCMAKE_POLICY_VERSION_MINIMUM=3.5"]
 hostmakedepends = ["cmake", "ninja", "pkgconf"]
@@ -9,6 +9,12 @@ license = "Apache-2.0"
 url = "https://github.com/EHfive/ldacBT"
 source = f"{url}/releases/download/v{pkgver}/ldacBT-{pkgver}.tar.gz"
 sha256 = "4bd8eece78bb5c1361fab95743e7100506e2408a25c4a592a0f8d349746dc5b4"
+# local znver4 tuning, harmless no-op if ever cross-built for another target
+tool_flags = (
+    {"CFLAGS": ["-march=znver4"], "CXXFLAGS": ["-march=znver4"]}
+    if self.profile().arch == "x86_64"
+    else {}
+)
 # no test suite
 options = ["!check"]
 

@@ -1,0 +1,11 @@
+--- xcur2png.c.old	2026-03-29 01:03:07.014247759 +0000
++++ xcur2png.c	2026-03-29 01:03:21.608554222 +0000
+@@ -671,7 +671,7 @@
+   int ret;
+   int count = 0;
+   char pngName[PATH_MAX] = {0};
+-  extern dry_run;
++  extern int dry_run;
+   
+   //Write comment on config-file.
+   fprintf (conffp,"#size\txhot\tyhot\tPath to PNG image\tdelay\n");

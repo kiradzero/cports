@@ -1,6 +1,6 @@
 pkgname = "zlib-ng"
 pkgver = "2.2.5"
-pkgrel = 0
+pkgrel = 1
 build_style = "cmake"
 hostmakedepends = [
     "cmake",
@@ -13,6 +13,14 @@ license = "Zlib"
 url = "https://github.com/zlib-ng/zlib-ng"
 source = f"{url}/archive/refs/tags/{pkgver}.tar.gz"
 sha256 = "5b3b022489f3ced82384f06db1e13ba148cbce38c7941e424d6cb414416acd18"
+# local znver4 tuning, harmless no-op if ever cross-built for another target
+tool_flags = (
+    {"CFLAGS": ["-march=znver4"], "CXXFLAGS": ["-march=znver4"]}
+    if self.profile().arch == "x86_64"
+    else {}
+)
+# I'm lazy
+options = ["!check"]
 
 
 @subpackage("zlib-ng-devel")

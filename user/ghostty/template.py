@@ -1,40 +1,54 @@
 pkgname = "ghostty"
-pkgver = "1.2.2"
-pkgrel = 1
+pkgver = "1.4.0"
+pkgrel = 0
 hostmakedepends = [
     "blueprint-compiler",
     "glib-devel",
     "libxml2-progs",
+    "ncurses",
     "pkgconf",
     "zvm",
 ]
 makedepends = [
     "fontconfig-devel",
     "freetype-devel",
+    "glslang-devel",
     "gtk4-devel",
     "gtk4-layer-shell-devel",
     "harfbuzz-devel",
+    "highway-devel",
     "libadwaita-devel",
     "libcxx-devel",
     "libcxxabi-devel",
+    "libpng-devel",
     "linux-headers",
+    "oniguruma-devel",
+    "zlib-ng-devel",
 ]
-pkgdesc = "Fast, native, feature-rich terminal emulator pushing modern features"
+pkgdesc = "Fast, native, feature-rich terminal emulator pushing modern \
+features"
 license = "MIT"
 url = "https://ghostty.org"
-source = f"https://github.com/ghostty-org/ghostty/archive/refs/tags/v{
-    pkgver}.tar.gz"
-sha256 = "1f76d0425dbaf696c44b16715ec8c38890175bd97ca1b46a7d058fb3f7a960e9"
+source = "https://github.com/ghostty-org/ghostty/archive/refs/tags/tip.tar.gz"
+
+sha256 = "10227bcb510ab707cd515a7f39145ead56bcf8f82a64af5e608912eeb63b1400"
 # No tests
 options = ["!check"]
-_zig_version = "0.14.1"
+_zig_version = "0.16.1"
 _build_args = [
     "-Doptimize=ReleaseFast",
     "-Dpie",
     f"-Dversion-string={pkgver}",
-    "-fsys=freetype",
+    "-Dcpu=native",
     "-fsys=fontconfig",
+    "-fsys=freetype",
+    "-fsys=glslang",
+    "-fsys=gtk4-layer-shell",
     "-fsys=harfbuzz",
+    "-fsys=highway",
+    "-fsys=libpng",
+    "-fsys=oniguruma",
+    "-fsys=zlib",
 ]
 
 

@@ -1,5 +1,5 @@
 pkgname = "throne"
-pkgver = "1.0.13"
+pkgver = "1.1.6"
 pkgrel = 0
 build_style = "cmake"
 configure_args = ["-DCMAKE_BUILD_TYPE=Release"]
@@ -20,7 +20,7 @@ pkgdesc = "Cross-platform GUI proxy utility"
 license = "GPL-3.0-or-later"
 url = "https://github.com/throneproj/Throne"
 source = f"{url}/archive/refs/tags/{pkgver}.tar.gz"
-sha256 = "b5abdc6aab685e4433762fdf678ccb6a2e32c31a7f348f486634c6c231de0c7c"
+sha256 = "7c4a8fe1b2fc11b3197ecf70a63ff1a583b2ad9858ceedff7fddbbb2f9189efc"
 # no tests
 # cross: needs host protoc/moc
 options = ["!check", "!cross"]
@@ -54,16 +54,7 @@ def pre_build(self):
         env=goenv,
     )
 
-    self.do(
-        "go",
-        "mod",
-        "tidy",
-        wrksrc="core/protorpc",
-        allow_network=True,
-        env=goenv,
-    )
-
-    # Build protoc generators
+    # Build protoc-gen-go
     self.do(
         "go",
         "build",
@@ -76,16 +67,14 @@ def pre_build(self):
         env=goenv,
     )
 
+    # Install protoc-gen-go-grpc (separate module, not in server's go.mod)
     self.do(
         "go",
-        "build",
-        "-v",
-        "-trimpath",
-        "-o",
-        f"{gobin_chroot}/protoc-gen-protorpc",
-        ".",
-        wrksrc="core/protorpc/protoc-gen-protorpc",
-        env=goenv,
+        "install",
+        "google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest",
+        wrksrc="core/server",
+        allow_network=True,
+        env={**goenv, "GOBIN": f"{self.chroot_cwd}/bin"},
     )
 
     # Generate protobuf code
@@ -94,11 +83,11 @@ def pre_build(self):
         "-I",
         ".",
         f"--plugin=protoc-gen-go={gobin_chroot}/protoc-gen-go",
-        f"--plugin=protoc-gen-protorpc={gobin_chroot}/protoc-gen-protorpc",
+        f"--plugin=protoc-gen-go-grpc={gobin_chroot}/protoc-gen-go-grpc",
         "--go_out=.",
         "--go_opt=paths=source_relative",
-        "--protorpc_out=.",
-        "--protorpc_opt=paths=source_relative",
+        "--go-grpc_out=.",
+        "--go-grpc_opt=paths=source_relative",
         "libcore.proto",
         wrksrc="core/server/gen",
     )

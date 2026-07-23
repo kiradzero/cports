@@ -1,0 +1,50 @@
+CppHeaderParser cannot parse "typedef enum {...} A, B;" (multiple
+typedef names, used by HIPresourcetype_enum and friends in the hip
+headers); split the second name into its own typedef before parsing.
+Also handle anonymous structs/unions, which the robotpy fork names
+"<anon-struct-N>" instead of the "Parent::" the old checks matched:
+recurse into their fields instead of printing them directly, and skip
+emitting operator<< for the anonymous types themselves.
+
+diff --git a/script/gen_ostream_ops.py b/script/gen_ostream_ops.py
+--- a/script/gen_ostream_ops.py
++++ b/script/gen_ostream_ops.py
+@@ -149,7 +149,7 @@
+             prop = cppHeader.classes[cppHeader_struct]["properties"]["public"][l][key4]
+ 
+         str = ''
+-        if "union" not in mtype:
++        if "union" not in mtype and "<anon" not in mtype:
+             indent = ""
+             str += "    if (std::string(\"" + cppHeader_struct + "::" + name + "\").find(" + apiname.upper() + "_structs_regex" + ") != std::string::npos)   {\n"
+             indent = "    "
+@@ -163,6 +163,9 @@
+             if "void" not in mtype:
+                 global_str += str
+         else:
++            if "<anon" in mtype:
++                process_struct(file_handle, mtype, cppHeader, name, apiname)
++                continue
+             if prop != '':
+               next_cppHeader_struct = prop + "::"
+               process_struct(file_handle, next_cppHeader_struct, cppHeader, name, apiname)
+@@ -180,7 +183,11 @@
+     global apiname
+     global global_str
+     try:
+-        cppHeader = CppHeaderParser.CppHeader(infilepath)
++        with open(infilepath) as infile:
++            contents = infile.read()
++        contents = re.sub(r'\}\s*(\w+)\s*,\s*(\w+)\s*;',
++                          r'} \1;\ntypedef \1 \2;', contents)
++        cppHeader = CppHeaderParser.CppHeader(contents, argType="string")
+     except CppHeaderParser.CppParseError as e:
+         print(e)
+         sys.exit(1)
+@@ -236,5 +243,6 @@
+     for c in cppHeader.classes:
+         if c[-2] == ':' and c[-1] == ':': continue #ostream operator cannot be overloaded for anonymous struct therefore it is skipped
++        if '<anon' in c: continue
+         if "::union" in c:
+             continue
+         if c in structs_analyzed:

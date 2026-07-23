@@ -1,0 +1,54 @@
+boost::optional's converting constructor is now explicit, so the
+copy-list-initialization "return {x};" of an optional return value no
+longer compiles ("chosen constructor is explicit in copy-initialization").
+Return the value directly instead. (std::optional is unaffected: its
+converting constructor is only conditionally explicit.)
+
+diff --git a/src/find_controls.cpp b/src/find_controls.cpp
+index 4e87575..f0a0d4b 100644
+--- a/src/find_controls.cpp
++++ b/src/find_controls.cpp
+@@ -161,7 +161,7 @@ boost::optional<std::vector<solver::Id>> GetEnvFindOnlySolverImpl()
+     if(res.empty())
+         return boost::none;
+     else
+-        return {res};
++        return res;
+ }
+ 
+ } // namespace
+diff --git a/src/target_properties.cpp b/src/target_properties.cpp
+index 6fb960b..d30940e 100644
+--- a/src/target_properties.cpp
++++ b/src/target_properties.cpp
+@@ -86,7 +86,7 @@ void TargetProperties::Init(const Handle* const handle)
+     // Therefore we compute default SRAMECC and rely on it for now.
+     sramecc = [&]() -> boost::optional<bool> {
+         if(name == "gfx906" || name == "gfx908")
+-            return {true};
++            return true;
+         return {};
+     }();
+     // However we need to store the reported state, even if it is incorrect,
+diff --git a/src/include/miopen/sqlite_db.hpp b/src/include/miopen/sqlite_db.hpp
+index 87f8e1b..5d3cdd7 100644
+--- a/src/include/miopen/sqlite_db.hpp
++++ b/src/include/miopen/sqlite_db.hpp
+@@ -463,7 +463,7 @@ public:
+                 ovr_rec.SetValues(vals.at(0), vals.at(1));
+             }
+             if(success)
+-                return {ovr_rec};
++                return ovr_rec;
+         }
+         std::string clause;
+         std::vector<std::string> values;
+@@ -498,7 +498,7 @@ public:
+         if(rec.GetSize() == 0)
+             return boost::none;
+         else
+-            return {rec};
++            return rec;
+     }
+ 
+     /// Removes ID with associated VALUES from record with key PROBLEM_CONFIG from db.

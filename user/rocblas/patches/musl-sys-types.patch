@@ -1,0 +1,13 @@
+rocblas_ostream.hpp uses dev_t and ino_t (in file_id_t) but only gets them
+transitively on glibc. musl requires an explicit <sys/types.h>.
+
+--- a/library/src/include/rocblas_ostream.hpp
++++ b/library/src/include/rocblas_ostream.hpp
+@@ -22,6 +22,7 @@
+
+ #pragma once
+
++#include <sys/types.h>
+ #include "rocblas.h"
+ #include "utility.hpp"
+ #include <cmath>

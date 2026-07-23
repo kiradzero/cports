@@ -1,0 +1,29 @@
+The vendored amdgpu_drm.h duplicates struct drm_color_ctm_3x4, which
+Chimera's newer system libdrm now also defines in drm_mode.h (both get
+included) -> "redefinition of 'drm_color_ctm_3x4'". Upstream even marks
+it "wrong namespace". Guard the vendored copy on drm_mode.h's include
+guard so it only defines when the system header is absent.
+
+diff --git a/include/amd_smi/impl/amdgpu_drm.h b/include/amd_smi/impl/amdgpu_drm.h
+index b56a5ac..ee03482 100644
+--- a/include/amd_smi/impl/amdgpu_drm.h
++++ b/include/amd_smi/impl/amdgpu_drm.h
+@@ -1625,7 +1625,9 @@ struct drm_amdgpu_info_uq_metadata {
+ #define AMDGPU_FAMILY_GC_11_5_0			150 /* GC 11.5.0 */
+ #define AMDGPU_FAMILY_GC_12_0_0			152 /* GC 12.0.0 */
+ 
+-/* FIXME wrong namespace! */
++/* FIXME wrong namespace! Newer system libdrm defines this in drm_mode.h;
++ * only define it here if that header was not already pulled in. */
++#ifndef _DRM_MODE_H
+ struct drm_color_ctm_3x4 {
+ 	/*
+ 	 * Conversion matrix with 3x4 dimensions in S31.32 sign-magnitude
+@@ -1633,6 +1635,7 @@ struct drm_color_ctm_3x4 {
+ 	 */
+ 	__u64 matrix[12];
+ };
++#endif
+ 
+ #if defined(__cplusplus)
+ }

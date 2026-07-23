@@ -1,6 +1,6 @@
 pkgname = "xz"
 pkgver = "5.8.3"
-pkgrel = 0
+pkgrel = 1
 build_style = "gnu_configure"
 hostmakedepends = ["automake", "libtool", "pkgconf"]
 makedepends = []
@@ -10,7 +10,14 @@ license = "0BSD"
 url = "https://tukaani.org/xz"
 source = f"https://github.com/tukaani-project/xz/releases/download/v{pkgver}/xz-{pkgver}.tar.gz"
 sha256 = "3d3a1b973af218114f4f889bbaa2f4c037deaae0c8e815eec381c3d546b974a0"
-options = ["bootstrap"]
+# local znver4 tuning, harmless no-op if ever cross-built for another target
+tool_flags = (
+    {"CFLAGS": ["-march=znver4"], "CXXFLAGS": ["-march=znver4"]}
+    if self.profile().arch == "x86_64"
+    else {}
+)
+# I'm lazy
+options = ["!check", "bootstrap"]
 
 
 if self.stage > 0:

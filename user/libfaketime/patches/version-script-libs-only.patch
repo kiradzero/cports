@@ -1,0 +1,28 @@
+The libfaketime.map version script is required so the .symver directives in
+libfaketime.c (timer_gettime@GLIBC_2.2, pthread_cond_timedwait@GLIBC_2.2.5,
+...) resolve to defined version nodes when linking the shared libraries.
+
+However the Makefile also applies it to the faketime *binary*, which does not
+define any of those symbols. GNU ld tolerates this, but lld (used on Chimera)
+treats a version-script assignment to an undefined symbol as a hard error.
+
+Apply the version script only to the shared library link (LIB_LDFLAGS) so the
+binary links cleanly under lld.
+
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -137,11 +137,11 @@
+ endif
+
+ LIB_LDFLAGS += -shared
++ifneq ($(PLATFORM),SunOS)
++LIB_LDFLAGS += -Wl,--version-script=libfaketime.map
++endif
+
+ LDFLAGS += $(FAKETIME_LINK_FLAGS)
+-ifneq ($(PLATFORM),SunOS)
+-LDFLAGS += -Wl,--version-script=libfaketime.map
+-endif
+
+ LDADD += -ldl -lm -lrt -lpthread
+ BIN_LDFLAGS += -lrt -lpthread
