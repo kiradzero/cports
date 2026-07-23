@@ -14,7 +14,7 @@ make_dir = "mbuild"
 meson_dir = "build/meson"
 hostmakedepends = ["meson", "pkgconf"]
 makedepends = ["lz4-devel", "xz-devel", "zlib-ng-compat-devel"]
-provides = [self.with_pkgver("libzstd")]
+renames = ["libzstd"]
 pkgdesc = "Zstd compression utilities"
 license = "BSD-3-Clause"
 url = "http://www.zstd.net"
@@ -28,11 +28,34 @@ tool_flags = (
 )
 compression = "deflate"
 hardening = ["!vis", "!cfi"]
-# I'm lazy
+# needs gtest
 options = ["!check"]
 
 
-def post_install(self):
+def build(self):
+    self.do("make", f"-j{self.make_jobs}", "PREFIX=/usr", "lib-mt")
+    self.do(
+        "make",
+        f"-j{self.make_jobs}",
+        "PREFIX=/usr",
+        "-C",
+        "programs",
+        "zstd-dll",
+        "LIB_BINDIR=../lib",
+    )
+    self.do("make", f"-j{self.make_jobs}", "PREFIX=/usr", "-C", "contrib/pzstd")
+
+
+def install(self):
+    self.do("make", "PREFIX=/usr", f"DESTDIR={self.chroot_destdir}", "install")
+    self.do(
+        "make",
+        "-C",
+        "contrib/pzstd",
+        "PREFIX=/usr",
+        f"DESTDIR={self.chroot_destdir}",
+        "install",
+    )
     self.install_license("LICENSE")
     for tool in ["zstdgrep", "zstdless"]:
         self.uninstall(f"usr/bin/{tool}")

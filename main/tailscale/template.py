@@ -1,6 +1,6 @@
 pkgname = "tailscale"
 pkgver = "1.98.1"
-pkgrel = 1
+pkgrel = 2
 build_style = "go"
 make_build_args = [
     "-ldflags="
@@ -38,6 +38,6 @@ def post_install(self):
     self.install_file(
         self.files_path / "tailscaled.wrapper", "usr/lib", mode=0o755
     )
-    self.install_service("^/tailscaled")
+    self.install_service(self.files_path / "tailscaled")
     for shell in ["bash", "fish", "zsh"]:
         self.install_completion(f"tailscale.{shell}", shell)

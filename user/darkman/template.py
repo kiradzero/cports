@@ -1,6 +1,6 @@
 pkgname = "darkman"
 pkgver = "2.3.1"
-pkgrel = 0
+pkgrel = 1
 build_style = "go"
 make_build_args = [
     f"-ldflags=-X main.Version=v{pkgver}",
@@ -47,7 +47,7 @@ def post_install(self):
         "usr/share/applications",
     )
 
-    self.install_service("^/darkman.user")
+    self.install_service(self.files_path / "darkman.user")
 
     self.install_man("darkman.1")
 

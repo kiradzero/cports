@@ -1,6 +1,6 @@
 pkgname = "plasma-desktop"
 pkgver = "6.7.3"
-pkgrel = 0
+pkgrel = 1
 build_style = "cmake"
 # FIXME: missing layout memory xml file? QTemporaryFile broken?
 # tst_calibrationtool: broken on ppc64le
@@ -60,7 +60,6 @@ makedepends = [
     "wayland-protocols",
     "xcb-util-devel",
     "xserver-xorg-devel",
-    "xserver-xorg-input-evdev-devel",
     "xserver-xorg-input-libinput-devel",
     # TODO: PackageKitQt6? (Software Manager integration, KRunner plugin installer)
 ]
@@ -104,6 +103,13 @@ depends = [
     "xdg-user-dirs-gtk",
     "xdg-utils",
 ]
+# TODO: maybe we could split it? maybe with meta reorg
+provides = [
+    self.with_pkgver("sddm-theme-default"),
+    # transitional
+    self.with_pkgver("sddm-default-breeze"),
+]
+replaces = ["sddm<0.21.0-r7"]
 pkgdesc = "KDE Plasma Desktop"
 license = "GPL-2.0-only AND LGPL-2.1-only"
 url = "https://kde.org/plasma-desktop"
@@ -119,6 +125,11 @@ if self.profile().arch in ["aarch64", "ppc64le", "x86_64"]:
 
 
 def post_install(self):
+    # install default breeze theme selection for sddm, it looks way better
+    self.install_file(
+        self.files_path / "10-breeze-theme.conf",
+        "usr/lib/sddm/sddm.conf.d",
+    )
     self.uninstall("usr/lib/systemd/user/plasma-kaccess.service")
 
 
@@ -183,7 +194,6 @@ def _(self):
         "plasma-workspace-x11",  # xsession
         "setxkbmap",  # configure non-us layout
         "wacomtablet",  # wacom tablet settings
-        # "xserver-xorg-input-evdev",  # TODO: used by mouse KCM? page loads even without it at least
         "xserver-xorg-input-libinput",  # general input
     ]
     self.install_if = [self.parent, "xserver-xorg-core"]
@@ -226,6 +236,7 @@ def _(self):
         "ksystemlog",  # log viewer (TODO: does it ask for root itself?)
         "ktorrent",  # torrent client
         "ktrip",  # trip planner
+        "neochat",  # matrix client
         "okular",  # document viewer
         "partitionmanager",  # partition manager
         "plasma-systemmonitor",
@@ -235,7 +246,6 @@ def _(self):
         "spectacle",  # screenshot
         "sweeper",  # cache cleaner
         "yakuake",  # drop-down terminal
-        # "neochat",  # local WIP, matrix client
         # - still qt5
         # "kamoso",  # camera
         # "kipi-plugins",  # image export

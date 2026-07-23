@@ -1,30 +1,24 @@
 pkgname = "nwg-look"
 pkgver = "1.1.1"
-pkgrel = 0
-build_style = "makefile"
-hostmakedepends = [
-    "autoconf",
-    "automake",
-    "go",
-    "pkgconf",
-    "xcur2png",
-]
-makedepends = [
-    "cairo-devel",
-    "glib-devel",
-    "gobject-introspection-devel",
-    "gsettings-desktop-schemas-devel",
-    "gtk+3-devel",
-]
-pkgdesc = "GTK settings editor"
+pkgrel = 1
+build_style = "go"
+hostmakedepends = ["go", "pkgconf"]
+makedepends = ["gtk+3-devel"]
+depends = ["xcur2png"]
+pkgdesc = "GTK settings editor for wlroots"
 license = "MIT"
-url = f"https://github.com/nwg-piotr/{pkgname}"
+url = "https://github.com/nwg-piotr/nwg-look"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
 sha256 = "568c5efe443892d74ffce6cf8ac7db2aea6071be70d97d3ba7c5efd8b351e601"
-# No tests
-# FIXME lintpixmaps
-options = ["!check", "!lintpixmaps"]
 
 
-def build(self):
-    self.do("make", "build")
+def install(self):
+    self.install_bin("build/nwg-look")
+    self.install_license("LICENSE")
+    self.install_file("stuff/main.glade", "usr/share/nwg-look")
+    self.install_files("langs", "usr/share/nwg-look")
+    self.install_file("stuff/nwg-look.desktop", "usr/share/applications")
+    self.install_file(
+        "stuff/nwg-look.svg",
+        "usr/share/icons/hicolor/scalable/apps",
+    )

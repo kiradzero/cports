@@ -1843,6 +1843,10 @@ the template including for subpackages:
   disable linker and LTO threads.
 * `linkundefver` *(false)* Pass `--undefined-version` to `ld.lld` to
   bypass version errors in affected packages.
+* `linkrelax` *(true)* If disabled, disables linker relaxation for
+  `ld.lld`. If possible, use `LDFLAGS` for this, this is a big hammer
+  mostly for e.g. Rust things on specific platforms where there is no
+  way to pass the flags correctly.
 * `framepointer` *(true)* If enabled, frame pointers will be turned
   on to make profiling of resultant binaries easier.
 * `fullrustflags` *(false)* If enabled, RUSTFLAGS will also contain
@@ -2522,9 +2526,7 @@ Shared API for both templates and subpackages.
 All APIs may raise errors. The user is not supposed to handle the errors,
 they will be handled appropriately by `cbuild`.
 
-Filesystem APIs take strings or `pathlib` paths. They also allow the special
-prefix `>/` in the path as a shorthand for `self.destdir`, and the special
-prefix `^/` that is a shorthand for `self.files_path`.
+Filesystem APIs take strings or `pathlib` paths.
 
 ##### self.pkgname
 
@@ -3825,6 +3827,8 @@ The allowed variables are:
 * `vdsuffix` *(str)* A Python regular expression matching the part that
   follows the numeric part of the version directory in the URL. Used when
   `single_directory` is disabled. The default is `|\.x`.
+* `agent_name` *(str)* The pre-slash part of the user agent. Usually not
+  necessary but sometimes we can't do update checking otherwise.
 
 You can define some functions:
 

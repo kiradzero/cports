@@ -1,6 +1,6 @@
 pkgname = "syncthing"
 pkgver = "2.1.2"
-pkgrel = 0
+pkgrel = 1
 build_style = "go"
 make_build_args = [
     f"-ldflags=-X github.com/syncthing/syncthing/lib/build.Version=v{pkgver}",
@@ -71,7 +71,7 @@ def post_install(self):
         name="syncthing.svg",
     )
 
-    self.install_service("^/syncthing.user")
+    self.install_service(self.files_path / "syncthing.user")
 
 
 @subpackage("syncthing-relaysrv")

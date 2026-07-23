@@ -3,7 +3,6 @@ pkgver = "0.7.1"
 pkgrel = 0
 build_style = "gnu_configure"
 hostmakedepends = [
-    "autoconf",
     "automake",
     "pkgconf",
 ]
@@ -11,10 +10,13 @@ makedepends = [
     "libpng-devel",
     "libxcursor-devel",
 ]
-pkgdesc = "Program to take PNG image from X cursor"
-license = "GPL-3.0-only"
-url = f"https://github.com/eworm-de/{pkgname}"
-source = f"{url}/archive/refs/tags/{pkgver}.tar.gz"
-sha256 = "3874e8bd4f287dbd8b6d4a16ee1f450970965fd773288d85bb53143e2e631add"
-# no tests
-options = ["!check"]
+pkgdesc = "Convert X cursors to PNG images"
+license = "GPL-3.0-or-later"
+url = "https://github.com/eworm-de/xcur2png"
+source = f"{url}/releases/download/{pkgver}/xcur2png-{pkgver}.tar.gz"
+sha256 = "bc6a062fdb48615a7159ed56ef3d2011168cd8a9decaf1d8a4e316d3064132c9"
+hardening = ["vis", "cfi"]
+
+
+def post_install(self):
+    self.install_man("xcur2png.1")
