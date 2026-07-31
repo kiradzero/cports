@@ -1,5 +1,5 @@
 pkgname = "opencode"
-pkgver = "1.18.9"
+pkgver = "1.18.10"
 pkgrel = 0
 archs = ["x86_64", "aarch64"]
 pkgdesc = "AI coding agent built for the terminal"

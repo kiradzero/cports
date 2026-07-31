@@ -1,6 +1,6 @@
 pkgname = "glfw-wayland-minecraft-cursorfix"
-pkgver = "3.4"
-pkgrel = 3
+pkgver = "3.5.1"
+pkgrel = 0
 build_style = "cmake"
 configure_args = [
     "-DBUILD_SHARED_LIBS=ON",
@@ -26,8 +26,10 @@ makedepends = [
 pkgdesc = "Library for OpenGL window and input"
 license = "Zlib"
 url = "https://github.com/BoyOrigin/glfw-wayland"
-source = f"https://github.com/glfw/glfw/releases/download/{pkgver}/glfw-{pkgver}.zip"
-sha256 = "b5ec004b2712fd08e8861dc271428f048775200a2df719ccf575143ba749a3e9"
+source = (
+    f"https://github.com/glfw/glfw/releases/download/{pkgver}/glfw-{pkgver}.zip"
+)
+sha256 = "ea79bc5feffc254c87291980c2d0bce9acebb68c4983b79f961dcd2cb8a611a0"
 
 provides = ["so:libglfw.so.3=0", "so:libglfw.so.3.4=0"]
 replaces = ["glfw"]

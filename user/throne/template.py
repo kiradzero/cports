@@ -1,5 +1,5 @@
 pkgname = "throne"
-pkgver = "1.2.1"
+pkgver = "1.2.2"
 pkgrel = 0
 build_style = "cmake"
 configure_args = ["-DCMAKE_BUILD_TYPE=Release"]
@@ -20,7 +20,7 @@ pkgdesc = "Cross-platform GUI proxy utility"
 license = "GPL-3.0-or-later"
 url = "https://github.com/throneproj/Throne"
 source = f"{url}/archive/refs/tags/{pkgver}.tar.gz"
-sha256 = "2db86e0b7e7200a2779829404f42c26728969d7ce6f9e246f5fd22b8bda2779a"
+sha256 = "c35734ed6fa91eda69cbee92440fc96cd5dc32db20d0de9c0b18ed59846a9313"
 # no tests
 # cross: needs host protoc/moc
 options = ["!check", "!cross"]

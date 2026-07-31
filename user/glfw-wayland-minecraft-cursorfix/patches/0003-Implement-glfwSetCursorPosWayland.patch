@@ -5,16 +5,16 @@ Subject: [PATCH] Implement glfwSetCursorPosWayland
 
 
 diff --git a/src/wl_platform.h b/src/wl_platform.h
-index 83cb12a5..d51c2134 100644
 --- a/src/wl_platform.h
 +++ b/src/wl_platform.h
-@@ -415,6 +415,8 @@ typedef struct _GLFWwindowWayland
-     } fallback;
+@@ -406,6 +406,8 @@ typedef struct _GLFWwindowWayland
+     } libdecor;
  
-     uint32_t                    pointerAxisTime;
+     double                      cursorPosX, cursorPosY;
 +    double                      askedCursorPosX, askedCursorPosY;
 +    GLFWbool                    didAskForSetCursorPos;
- } _GLFWwindowWayland;
+ 
+     char*                       appId;
  
  // Wayland-specific global data
 diff --git a/src/wl_window.c b/src/wl_window.c
