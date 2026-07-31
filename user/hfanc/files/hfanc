@@ -1,0 +1,30 @@
+# hfanc -- fan policy for the HONOR MagicBook BRI-XX.
+#
+# Deliberately does not depend on power-profiles-daemon: the profile is read
+# from /sys/firmware/acpi/platform_profile, which PPD writes but does not own,
+# so the fan keeps following the last selected profile even if PPD is stopped.
+
+type = process
+command = /usr/bin/hfanc run
+
+# on-failure rather than true: a clean exit means someone stopped it on
+# purpose, and restarting then would fight the operator.
+restart = on-failure
+restart-delay = 5
+
+# If the module is missing, hfanc exits at once and there is nothing to retry
+# forever; give up after a minute of attempts and leave the fan to the
+# firmware, which is a perfectly safe place for it to be.
+restart-limit-count = 10
+restart-limit-interval = 60
+
+logfile = /var/log/hfanc.log
+# Readable without root: there is nothing sensitive in it, and needing doas to
+# see why the fan is doing something is a poor way to run a diagnostic.
+logfile-permissions = 644
+
+# The module has to be up: hfanc refuses to start without honor_ec_fan rather
+# than running blind.
+depends-on: early-modules.target
+depends-on: local.target
+before: login.target

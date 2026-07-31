@@ -1,0 +1,355 @@
+Keep cached blur output at reduced resolution.
+
+Blurred images contain little high-frequency detail, so avoid the final
+full-resolution upsample by default and linearly upscale during composition.
+This also removes the largest blur texture allocation.
+--
+diff --git a/docs/wiki/Configuration:-Miscellaneous.md b/docs/wiki/Configuration:-Miscellaneous.md
+index 7a2f42dd..b433efaf 100644
+--- a/docs/wiki/Configuration:-Miscellaneous.md
++++ b/docs/wiki/Configuration:-Miscellaneous.md
+@@ -343,6 +343,7 @@ blur {
+     // off
+     passes 3
+     offset 3
++    downscale 2
+     noise 0.02
+     saturation 1.5
+ }
+@@ -384,6 +385,21 @@ blur {
+ }
+ ```
+ 
++#### `downscale`
++
++Controls the resolution of the final cached blur texture.
++The default value of `2` keeps the result at half resolution and lets the compositor linearly upscale it while drawing.
++Since blurred images contain little high-frequency detail, this usually looks very close to full resolution while avoiding the most expensive upsampling pass and reducing output texture memory by 75%.
++
++Use `1` for full-resolution output. Powers of two are supported; other values are rounded down to the nearest power of two.
++The value cannot skip more levels than configured by `passes`.
++
++```kdl
++blur {
++    downscale 2
++}
++```
++
+ #### `noise`
+ 
+ Amount of noise to add on top of the blur.
+diff --git a/niri-config/src/appearance.rs b/niri-config/src/appearance.rs
+index a1c83271..183b358b 100644
+--- a/niri-config/src/appearance.rs
++++ b/niri-config/src/appearance.rs
+@@ -1011,6 +1011,8 @@ pub struct Blur {
+     pub off: bool,
+     pub passes: u8,
+     pub offset: f64,
++    /// Final blur texture downscale factor. Powers of two are supported.
++    pub downscale: u8,
+     pub noise: f64,
+     pub saturation: f64,
+ }
+@@ -1021,6 +1023,7 @@ impl Default for Blur {
+             off: false,
+             passes: 3,
+             offset: 3.,
++            downscale: 2,
+             noise: 0.02,
+             saturation: 1.5,
+         }
+@@ -1038,6 +1041,8 @@ pub struct BlurPart {
+     #[knuffel(child, unwrap(argument))]
+     pub offset: Option<FloatOrInt<0, 100>>,
+     #[knuffel(child, unwrap(argument))]
++    pub downscale: Option<u8>,
++    #[knuffel(child, unwrap(argument))]
+     pub noise: Option<FloatOrInt<0, 1000>>,
+     #[knuffel(child, unwrap(argument))]
+     pub saturation: Option<FloatOrInt<0, 1000>>,
+@@ -1050,7 +1055,7 @@ impl MergeWith<BlurPart> for Blur {
+             self.off = false;
+         }
+ 
+-        merge_clone!((self, part), passes);
++        merge_clone!((self, part), passes, downscale);
+         merge!((self, part), offset, noise, saturation);
+     }
+ }
+diff --git a/niri-config/src/lib.rs b/niri-config/src/lib.rs
+index 77f07967..24b4a711 100644
+--- a/niri-config/src/lib.rs
++++ b/niri-config/src/lib.rs
+@@ -1650,6 +1650,7 @@ mod tests {
+                 off: false,
+                 passes: 3,
+                 offset: 3.0,
++                downscale: 2,
+                 noise: 0.02,
+                 saturation: 1.5,
+             },
+diff --git a/src/render_helpers/blur.rs b/src/render_helpers/blur.rs
+index 9a92b771..291c6939 100644
+--- a/src/render_helpers/blur.rs
++++ b/src/render_helpers/blur.rs
+@@ -16,16 +16,20 @@ pub struct Blur {
+     program: BlurProgram,
+     /// Context ID of the renderer that created the program and the textures.
+     renderer_context_id: ContextId<GlesTexture>,
+-    /// Output texture followed by intermediate textures, large to small.
++    /// Blur pyramid textures, large to small.
+     ///
++    /// At downscale 1, the first texture is the full-size output. At higher
++    /// downscales, the pyramid starts at half size and omits that expensive output.
+     /// Created lazily and stored here to avoid recreating blur textures frequently.
+     textures: Vec<GlesTexture>,
++    output_level: usize,
+ }
+ 
+ #[derive(Debug, Default, Clone, Copy, PartialEq)]
+ pub struct BlurOptions {
+     pub passes: u8,
+     pub offset: f64,
++    pub downscale: u8,
+ }
+ 
+ impl From<niri_config::Blur> for BlurOptions {
+@@ -33,10 +37,19 @@ impl From<niri_config::Blur> for BlurOptions {
+         Self {
+             passes: config.passes,
+             offset: config.offset,
++            downscale: config.downscale,
+         }
+     }
+ }
+ 
++impl BlurOptions {
++    fn output_level(self, passes: usize) -> usize {
++        let downscale = self.downscale.max(1);
++        let level = u8::BITS - 1 - downscale.leading_zeros();
++        (level as usize).min(passes)
++    }
++}
++
+ #[derive(Debug, Clone)]
+ pub struct BlurProgram(Rc<BlurProgramInner>);
+ 
+@@ -100,6 +113,7 @@ impl Blur {
+             program,
+             renderer_context_id: renderer.context_id(),
+             textures: Vec::new(),
++            output_level: 0,
+         })
+     }
+ 
+@@ -116,49 +130,74 @@ impl Blur {
+         let _span = tracy_client::span!("Blur::prepare_textures");
+ 
+         let passes = options.passes.clamp(1, 31) as usize;
++        let output_level = options.output_level(passes);
++        let first_level = if output_level == 0 { 0 } else { 1 };
+         let size = source.size();
+ 
+-        if let Some(output) = self.textures.first_mut() {
+-            let old_size = output.size();
+-            if old_size != size {
++        if self.output_level != output_level {
++            trace!(
++                "recreating textures: output level changed from {} to {}",
++                self.output_level,
++                output_level
++            );
++            self.textures.clear();
++            self.output_level = output_level;
++        }
++
++        let mut expected_first_size = size;
++        for _ in 0..first_level {
++            expected_first_size.w = max(1, expected_first_size.w / 2);
++            expected_first_size.h = max(1, expected_first_size.h / 2);
++        }
++
++        if let Some(first) = self.textures.first_mut() {
++            let old_size = first.size();
++            if old_size != expected_first_size {
+                 trace!(
+-                    "recreating textures: output size changed from {} × {} to {} × {}",
++                    "recreating textures: first size changed from {} × {} to {} × {}",
+                     old_size.w,
+                     old_size.h,
+-                    size.w,
+-                    size.h
++                    expected_first_size.w,
++                    expected_first_size.h
+                 );
+                 self.textures.clear();
+-            } else if !output.is_unique_reference() {
+-                debug!("recreating textures: not unique",);
+-                // We only need to recreate the output texture here, but this case shouldn't really
+-                // happen anyway, and this is simpler.
+-                self.textures.clear();
+             }
+         }
+ 
+-        // Create any missing textures.
+-        let mut w = size.w;
+-        let mut h = size.h;
+-        for i in 0..=passes {
+-            let size = Size::new(w, h);
+-            w = max(1, w / 2);
+-            h = max(1, h / 2);
++        // The output clone must have been released before preparing for another render.
++        let output_idx = output_level - first_level;
++        if self
++            .textures
++            .get_mut(output_idx)
++            .is_some_and(|output| !output.is_unique_reference())
++        {
++            debug!("recreating textures: output is not unique");
++            self.textures.clear();
++        }
+ 
+-            if self.textures.len() > i {
+-                // This texture already exists.
++        // Create any missing pyramid textures. Level 0 is only needed for full-size output;
++        // downscaled output starts at level 1, saving the largest texture allocation.
++        let mut level_size = size;
++        for level in 0..=passes {
++            if level < first_level {
++                level_size.w = max(1, level_size.w / 2);
++                level_size.h = max(1, level_size.h / 2);
+                 continue;
+             }
+ 
+-            // debug!("creating texture for step {i} sized {w} × {h}");
++            let i = level - first_level;
++            if self.textures.len() <= i {
++                let texture: GlesTexture = create_texture(Fourcc::Abgr8888, level_size)
++                    .context("error creating texture")?;
++                self.textures.push(texture);
++            }
+ 
+-            let texture: GlesTexture =
+-                create_texture(Fourcc::Abgr8888, size).context("error creating texture")?;
+-            self.textures.push(texture);
++            level_size.w = max(1, level_size.w / 2);
++            level_size.h = max(1, level_size.h / 2);
+         }
+ 
+-        // Drop any no longer needed textures.
+-        self.textures.drain(passes + 1..);
++        let expected_len = passes + 1 - first_level;
++        self.textures.drain(expected_len..);
+ 
+         Ok(())
+     }
+@@ -178,22 +217,24 @@ impl Blur {
+         );
+ 
+         let passes = options.passes.clamp(1, 31) as usize;
+-        let size = source.size();
++        let output_level = options.output_level(passes);
++        let first_level = if output_level == 0 { 0 } else { 1 };
++        let output_idx = output_level - first_level;
++        let expected_len = passes + 1 - first_level;
+ 
+         ensure!(
+-            self.textures.len() == passes + 1,
+-            "wrong textures len: expected {}, got {}",
+-            passes + 1,
+-            self.textures.len()
++            self.output_level == output_level,
++            "wrong output level: expected {output_level}, got {}",
++            self.output_level
+         );
+-
+-        let output = &mut self.textures[0];
+         ensure!(
+-            output.size() == size,
+-            "wrong output texture size: expected {size:?}, got {:?}",
+-            output.size()
++            self.textures.len() == expected_len,
++            "wrong textures len: expected {}, got {}",
++            expected_len,
++            self.textures.len()
+         );
+ 
++        let output = &mut self.textures[output_idx];
+         ensure!(
+             output.is_unique_reference(),
+             "output texture has a non-unique reference"
+@@ -228,9 +269,13 @@ impl Blur {
+                 vertices.as_ptr().cast(),
+             );
+ 
+-            let src = once(source).chain(&self.textures[1..]);
+-            let dst = &self.textures[1..];
+-            for (src, dst) in zip(src, dst) {
++            let down = if first_level == 0 {
++                &self.textures[1..]
++            } else {
++                &self.textures[..]
++            };
++            let src = once(source).chain(down.iter());
++            for (src, dst) in zip(src, down) {
+                 let dst_size = dst.size();
+                 let w = dst_size.w;
+                 let h = dst_size.h;
+@@ -288,8 +333,9 @@ impl Blur {
+                 vertices.as_ptr().cast(),
+             );
+ 
+-            let src = self.textures.iter().rev();
+-            let dst = self.textures.iter().rev().skip(1);
++            let output_pyramid = &self.textures[output_idx..];
++            let src = output_pyramid.iter().rev();
++            let dst = output_pyramid.iter().rev().skip(1);
+             for (src, dst) in zip(src, dst) {
+                 let dst_size = dst.size();
+                 let w = dst_size.w;
+@@ -337,6 +383,6 @@ impl Blur {
+             gl.DeleteFramebuffers(fbos.len() as _, fbos.as_ptr());
+         })?;
+ 
+-        Ok(self.textures[0].clone())
++        Ok(self.textures[output_idx].clone())
+     }
+ }
+diff --git a/src/render_helpers/effect_buffer.rs b/src/render_helpers/effect_buffer.rs
+index 017c2ef1..79bd45ec 100644
+--- a/src/render_helpers/effect_buffer.rs
++++ b/src/render_helpers/effect_buffer.rs
+@@ -102,6 +102,11 @@ impl EffectBuffer {
+         self.scale
+     }
+ 
++    /// Scale from source-buffer coordinates to coordinates in a rendered texture.
++    pub fn texture_scale(&self, texture: &GlesTexture) -> Scale<f64> {
++        texture.size().to_f64() / self.size.to_f64()
++    }
++
+     pub fn render_element_states(&self) -> Option<&RenderElementStates> {
+         self.offscreen.as_ref().map(|o| &o.states)
+     }
+diff --git a/src/render_helpers/xray.rs b/src/render_helpers/xray.rs
+index f4b4f861..5dd5a00d 100644
+--- a/src/render_helpers/xray.rs
++++ b/src/render_helpers/xray.rs
+@@ -314,6 +314,7 @@ impl RenderElement<GlesRenderer> for XrayElement {
+                 return Ok(());
+             }
+         };
++        let texture_src = src.upscale(buffer.texture_scale(&texture));
+ 
+         // FIXME: avoid reallocating a fresh Vec here somehow.
+         let mut filtered_damage = Vec::new();
+@@ -344,7 +345,7 @@ impl RenderElement<GlesRenderer> for XrayElement {
+ 
+         frame.render_texture_from_to(
+             &texture,
+-            src,
++            texture_src,
+             dst,
+             damage,
+             // FIXME: opaque regions need to be filtered like damage.

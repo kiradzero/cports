@@ -1,5 +1,5 @@
 pkgname = "ultralytics"
-pkgver = "8.4.103"
+pkgver = "8.4.110"
 pkgrel = 0
 build_style = "python_pep517"
 hostmakedepends = [
@@ -12,7 +12,7 @@ pkgdesc = "Ultralytics YOLO for SOTA object detection"
 license = "BSD-3-Clause"
 url = "https://github.com/ultralytics/ultralytics"
 source = f"$(PYPI)/u/{pkgname}/{pkgname}-{pkgver}.tar.gz"
-sha256 = "bfd423cf74f9be902d4688fd1fbbafac5c7097330a8c1e7e4ced3b45aa633793"
+sha256 = "088903b7b3c8dea137e065051e3b2b8fa30266d7a97324fe31a260fb2f96e745"
 # no pytests
 options = ["!check"]
 

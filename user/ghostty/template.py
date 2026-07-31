@@ -7,7 +7,6 @@ hostmakedepends = [
     "libxml2-progs",
     "ncurses",
     "pkgconf",
-    "zvm",
 ]
 makedepends = [
     "fontconfig-devel",
@@ -29,12 +28,23 @@ pkgdesc = "Fast, native, feature-rich terminal emulator pushing modern \
 features"
 license = "MIT"
 url = "https://ghostty.org"
-source = "https://github.com/ghostty-org/ghostty/archive/refs/tags/tip.tar.gz"
-
-sha256 = "10227bcb510ab707cd515a7f39145ead56bcf8f82a64af5e608912eeb63b1400"
+_zigver = "0.16.0"
+source = [
+    "https://github.com/ghostty-org/ghostty/archive/refs/tags/tip.tar.gz",
+    f"https://ziglang.org/download/{_zigver}/zig-x86_64-linux-{_zigver}.tar.xz",
+]
+source_paths = ["", "zig-toolchain"]
+sha256 = [
+    "4a5afdd273bd4bf4ee15ce3c4b817245b3a3b57b124ae34d4f7e366d71fa2c12",
+    "70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00",
+]
 # No tests
 options = ["!check"]
-_zig_version = "0.16.1"
+
+_zig_env = {
+    "ZIG_LOCAL_CACHE_DIR": "zig-cache",
+    "ZIG_GLOBAL_CACHE_DIR": "zig-global-cache",
+}
 _build_args = [
     "-Doptimize=ReleaseFast",
     "-Dpie",
@@ -53,8 +63,22 @@ _build_args = [
 
 
 def prepare(self):
+    # cbuild propagates proxy variables after merging env; Zig's HTTP client
+    # cannot download packages through the local proxy, so unset them here.
     self.do(
-        "zvm", "run", _zig_version, "build", *_build_args, allow_network=True
+        "env",
+        "-u",
+        "HTTP_PROXY",
+        "-u",
+        "HTTPS_PROXY",
+        "-u",
+        "SOCKS_PROXY",
+        self.chroot_srcdir / "zig-toolchain/zig",
+        "build",
+        *_build_args,
+        env=_zig_env,
+        path=[self.chroot_srcdir / "zig-toolchain"],
+        allow_network=True,
     )
 
 

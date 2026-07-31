@@ -1,5 +1,5 @@
 pkgname = "python-soupsieve"
-pkgver = "2.9"
+pkgver = "2.9.1"
 pkgrel = 0
 build_style = "python_pep517"
 hostmakedepends = [
@@ -14,7 +14,7 @@ pkgdesc = "CSS selector library designed to be used with Beautiful Soup 4"
 license = "MIT"
 url = "https://pypi.org/project/soupsieve"
 source = f"$(PYPI)/s/soupsieve/soupsieve-{pkgver}.tar.gz"
-sha256 = "acee8417325c5653e1377dc31eccad59eb82cbc65942afe6174c53b3aaad63fc"
+sha256 = "c33e6605bbc71dd628b00c632d58ae607c22bade247e52553928f83bbb75b4ba"
 # No check
 options = ["!check"]
 

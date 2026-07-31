@@ -1,5 +1,5 @@
 pkgname = "meshoptimizer"
-pkgver = "1.1"
+pkgver = "1.2"
 pkgrel = 0
 build_style = "cmake"
 configure_args = [
@@ -10,7 +10,7 @@ pkgdesc = "Mesh optimization library"
 license = "MIT"
 url = "https://github.com/zeux/meshoptimizer"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "b787011f81b4b3069c2f9065b7c191efdd4189a49be32ba5282dd5579f05261a"
+sha256 = "e40f71b809cdf3361b9a4def85fd44534e8733ce29d4b943c145b76859e4c2b4"
 
 
 def post_install(self):

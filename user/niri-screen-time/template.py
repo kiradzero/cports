@@ -1,5 +1,5 @@
 pkgname = "niri-screen-time"
-pkgver = "0.0.16"
+pkgver = "0.0.17"
 pkgrel = 0
 build_style = "go"
 hostmakedepends = [
@@ -12,7 +12,7 @@ pkgdesc = "Niri screen time tracker"
 license = "MIT"
 url = f"https://github.com/probeldev/{pkgname}"
 source = f"{url}/archive/refs/tags/v{pkgver}.tar.gz"
-sha256 = "e3884c78562ddf3f0c2fb11215f40edb34b05906ee6604fc60065d652d16a6c2"
+sha256 = "6fb3293ae53fd22ba70ff573a5ccc0a5a7a52fde52692058a1bad38f138527d3"
 # no tests
 options = ["!check"]
 

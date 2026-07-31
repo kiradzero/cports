@@ -1,0 +1,23 @@
+--- /dev/null
++++ b/cmake/Findlz4.cmake
+@@ -0,0 +1,20 @@
++find_package(PkgConfig QUIET)
++
++if(PkgConfig_FOUND)
++    pkg_check_modules(PC_LZ4 QUIET IMPORTED_TARGET liblz4)
++endif()
++
++include(FindPackageHandleStandardArgs)
++find_package_handle_standard_args(
++    lz4
++    REQUIRED_VARS PC_LZ4_LINK_LIBRARIES
++    VERSION_VAR PC_LZ4_VERSION
++)
++
++if(lz4_FOUND AND NOT TARGET LZ4::lz4)
++    add_library(LZ4::lz4 INTERFACE IMPORTED GLOBAL)
++    set_property(
++        TARGET LZ4::lz4
++        PROPERTY INTERFACE_LINK_LIBRARIES PkgConfig::PC_LZ4
++    )
++endif()

@@ -1,0 +1,496 @@
+Add an experimental liquid-glass optical pass to background blur.
+
+The pass adds configurable edge refraction, chromatic separation, and a
+directional highlight while retaining the existing Kawase blur.
+--
+diff --git a/docs/wiki/Configuration:-Miscellaneous.md b/docs/wiki/Configuration:-Miscellaneous.md
+index 7a2f42dd..0f59e51e 100644
+--- a/docs/wiki/Configuration:-Miscellaneous.md
++++ b/docs/wiki/Configuration:-Miscellaneous.md
+@@ -345,6 +345,10 @@ blur {
+     offset 3
+     noise 0.02
+     saturation 1.5
++    refraction 0.18
++    refraction-width 24
++    chromatic-aberration 1
++    highlight 0.22
+ }
+ ```
+ 
+@@ -407,3 +411,19 @@ blur {
+     saturation 1.5
+ }
+ ```
++
++#### Liquid glass
++
++The refractive rim can be adjusted with `refraction` and `refraction-width`.
++`refraction` controls displacement strength, while `refraction-width` is the width of the optical rim in logical pixels.
++`chromatic-aberration` controls red/blue separation in logical pixels, and `highlight` controls the directional specular rim.
++Set all four values to `0` for the traditional blur-only appearance.
++
++```kdl
++blur {
++    refraction 0.18
++    refraction-width 24
++    chromatic-aberration 1
++    highlight 0.22
++}
++```
+diff --git a/niri-config/src/appearance.rs b/niri-config/src/appearance.rs
+index a1c83271..924e7c31 100644
+--- a/niri-config/src/appearance.rs
++++ b/niri-config/src/appearance.rs
+@@ -1013,6 +1013,14 @@ pub struct Blur {
+     pub offset: f64,
+     pub noise: f64,
+     pub saturation: f64,
++    /// Strength of the glass-like refraction near effect edges.
++    pub refraction: f64,
++    /// Width of the refractive rim in logical pixels.
++    pub refraction_width: f64,
++    /// RGB separation at the refractive rim, in logical pixels.
++    pub chromatic_aberration: f64,
++    /// Strength of the directional edge highlight.
++    pub highlight: f64,
+ }
+ 
+ impl Default for Blur {
+@@ -1023,6 +1031,10 @@ impl Default for Blur {
+             offset: 3.,
+             noise: 0.02,
+             saturation: 1.5,
++            refraction: 0.18,
++            refraction_width: 24.,
++            chromatic_aberration: 1.,
++            highlight: 0.22,
+         }
+     }
+ }
+@@ -1041,6 +1053,14 @@ pub struct BlurPart {
+     pub noise: Option<FloatOrInt<0, 1000>>,
+     #[knuffel(child, unwrap(argument))]
+     pub saturation: Option<FloatOrInt<0, 1000>>,
++    #[knuffel(child, unwrap(argument))]
++    pub refraction: Option<FloatOrInt<0, 100>>,
++    #[knuffel(child, unwrap(argument))]
++    pub refraction_width: Option<FloatOrInt<0, 1024>>,
++    #[knuffel(child, unwrap(argument))]
++    pub chromatic_aberration: Option<FloatOrInt<0, 100>>,
++    #[knuffel(child, unwrap(argument))]
++    pub highlight: Option<FloatOrInt<0, 100>>,
+ }
+ 
+ impl MergeWith<BlurPart> for Blur {
+@@ -1051,7 +1071,16 @@ impl MergeWith<BlurPart> for Blur {
+         }
+ 
+         merge_clone!((self, part), passes);
+-        merge!((self, part), offset, noise, saturation);
++        merge!(
++            (self, part),
++            offset,
++            noise,
++            saturation,
++            refraction,
++            refraction_width,
++            chromatic_aberration,
++            highlight
++        );
+     }
+ }
+ 
+diff --git a/niri-config/src/lib.rs b/niri-config/src/lib.rs
+index 77f07967..caa6e1c6 100644
+--- a/niri-config/src/lib.rs
++++ b/niri-config/src/lib.rs
+@@ -1652,6 +1652,10 @@ mod tests {
+                 offset: 3.0,
+                 noise: 0.02,
+                 saturation: 1.5,
++                refraction: 0.18,
++                refraction_width: 24.0,
++                chromatic_aberration: 1.0,
++                highlight: 0.22,
+             },
+             gestures: Gestures {
+                 dnd_edge_view_scroll: DndEdgeViewScroll {
+diff --git a/src/render_helpers/background_effect.rs b/src/render_helpers/background_effect.rs
+index d148b6c1..214e39e9 100644
+--- a/src/render_helpers/background_effect.rs
++++ b/src/render_helpers/background_effect.rs
+@@ -8,7 +8,7 @@ use wayland_server::protocol::wl_surface::WlSurface;
+ 
+ use crate::handlers::background_effect::get_cached_blur_region;
+ use crate::niri_render_elements;
+-use crate::render_helpers::blur::BlurOptions;
++use crate::render_helpers::blur::{BlurOptions, GlassOptions};
+ use crate::render_helpers::damage::ExtraDamage;
+ use crate::render_helpers::framebuffer_effect::{FramebufferEffect, FramebufferEffectElement};
+ use crate::render_helpers::xray::{XrayElement, XrayPos};
+@@ -171,6 +171,11 @@ impl BackgroundEffect {
+         // to no effect if not blurred.
+         let blur = self.options.blur && !self.blur_config.off;
+         let blur_options = blur.then_some(BlurOptions::from(self.blur_config));
++        let glass_options = if blur {
++            GlassOptions::from(self.blur_config)
++        } else {
++            GlassOptions::default()
++        };
+         let noise = if blur { self.blur_config.noise } else { 0. };
+         let noise = self.options.noise.unwrap_or(noise) as f32;
+         let saturation = if blur {
+@@ -191,6 +196,7 @@ impl BackgroundEffect {
+                 params,
+                 xray_pos,
+                 blur,
++                glass_options,
+                 noise,
+                 saturation,
+                 &mut |elem| push(elem.into()),
+@@ -199,7 +205,14 @@ impl BackgroundEffect {
+             // Render non-xray effect.
+             let elem = self
+                 .nonxray
+-                .render(ns, params, blur_options, noise, saturation);
++                .render(
++                    ns,
++                    params,
++                    blur_options,
++                    glass_options,
++                    noise,
++                    saturation,
++                );
+             push(elem.into());
+         }
+     }
+diff --git a/src/render_helpers/blur.rs b/src/render_helpers/blur.rs
+index 9a92b771..eb95c501 100644
+--- a/src/render_helpers/blur.rs
++++ b/src/render_helpers/blur.rs
+@@ -37,6 +37,25 @@ impl From<niri_config::Blur> for BlurOptions {
+     }
+ }
+ 
++#[derive(Debug, Default, Clone, Copy, PartialEq)]
++pub struct GlassOptions {
++    pub refraction: f32,
++    pub refraction_width: f32,
++    pub chromatic_aberration: f32,
++    pub highlight: f32,
++}
++
++impl From<niri_config::Blur> for GlassOptions {
++    fn from(config: niri_config::Blur) -> Self {
++        Self {
++            refraction: config.refraction as f32,
++            refraction_width: config.refraction_width as f32,
++            chromatic_aberration: config.chromatic_aberration as f32,
++            highlight: config.highlight as f32,
++        }
++    }
++}
++
+ #[derive(Debug, Clone)]
+ pub struct BlurProgram(Rc<BlurProgramInner>);
+ 
+diff --git a/src/render_helpers/framebuffer_effect.rs b/src/render_helpers/framebuffer_effect.rs
+index 4dc529db..710a939f 100644
+--- a/src/render_helpers/framebuffer_effect.rs
++++ b/src/render_helpers/framebuffer_effect.rs
+@@ -15,7 +15,7 @@ use smithay::utils::{Buffer, Logical, Physical, Rectangle, Scale, Transform};
+ 
+ use crate::backend::tty::{TtyFrame, TtyRenderer, TtyRendererError};
+ use crate::render_helpers::background_effect::RenderParams;
+-use crate::render_helpers::blur::{Blur, BlurOptions};
++use crate::render_helpers::blur::{Blur, BlurOptions, GlassOptions};
+ use crate::render_helpers::renderer::AsGlesFrame as _;
+ use crate::render_helpers::shaders::{mat3_uniform, Shaders};
+ use crate::utils::region::TransformedRegion;
+@@ -36,6 +36,7 @@ pub struct FramebufferEffectElement {
+     subregion: Option<TransformedRegion>,
+     scale: f32,
+     blur_options: Option<BlurOptions>,
++    glass_options: GlassOptions,
+     noise: f32,
+     saturation: f32,
+ }
+@@ -66,6 +67,7 @@ impl FramebufferEffect {
+         ns: Option<usize>,
+         params: RenderParams,
+         blur_options: Option<BlurOptions>,
++        glass_options: GlassOptions,
+         noise: f32,
+         saturation: f32,
+     ) -> FramebufferEffectElement {
+@@ -87,6 +89,7 @@ impl FramebufferEffect {
+             subregion: params.subregion,
+             scale: params.scale as f32,
+             blur_options,
++            glass_options,
+             noise,
+             saturation,
+         }
+@@ -98,7 +101,7 @@ impl FramebufferEffectElement {
+         &self,
+         crop: Rectangle<f64, Logical>,
+         transform: Transform,
+-    ) -> [Uniform<'static>; 7] {
++    ) -> [Uniform<'static>; 12] {
+         let offset = crop.loc - (self.clip_geo.loc - self.geometry.loc);
+         let offset = Vec2::new(offset.x as f32, offset.y as f32);
+         let crop_size = Vec2::new(crop.size.w as f32, crop.size.h as f32);
+@@ -121,9 +124,17 @@ impl FramebufferEffectElement {
+             Uniform::new("geo_size", clip_geo_size),
+             Uniform::new("corner_radius", <[f32; 4]>::from(self.corner_radius)),
+             mat3_uniform("input_to_geo", input_to_clip_geo),
++            mat3_uniform("geo_to_input", input_to_clip_geo.inverse()),
+             Uniform::new("noise", self.noise),
+             Uniform::new("saturation", self.saturation),
+             Uniform::new("bg_color", [0f32, 0., 0., 0.]),
++            Uniform::new("glass_refraction", self.glass_options.refraction),
++            Uniform::new("glass_width", self.glass_options.refraction_width),
++            Uniform::new(
++                "glass_chromatic_aberration",
++                self.glass_options.chromatic_aberration,
++            ),
++            Uniform::new("glass_highlight", self.glass_options.highlight),
+         ]
+     }
+ }
+diff --git a/src/render_helpers/shaders/clipped_surface.frag b/src/render_helpers/shaders/clipped_surface.frag
+index e97f18c0..c34297df 100644
+--- a/src/render_helpers/shaders/clipped_surface.frag
++++ b/src/render_helpers/shaders/clipped_surface.frag
+@@ -27,19 +27,18 @@ uniform vec4 corner_radius;
+ uniform mat3 input_to_geo;
+ 
+ float niri_rounding_alpha(vec2 coords, vec2 size, vec4 corner_radius);
+-vec4 postprocess(vec4 color);
++vec4 sample_and_postprocess(vec2 texture_coords, vec2 geo_coords);
+ 
+ void main() {
+     vec3 coords_geo = input_to_geo * vec3(v_coords, 1.0);
+ 
+-    // Sample the texture.
+-    vec4 color = texture2D(tex, v_coords);
++    // Sample the texture. The postprocessor may displace texture coordinates for
++    // effects such as glass refraction.
++    vec4 color = sample_and_postprocess(v_coords, coords_geo.xy);
+ #if defined(NO_ALPHA)
+     color = vec4(color.rgb, 1.0);
+ #endif
+ 
+-    color = postprocess(color);
+-
+     if (coords_geo.x < 0.0 || 1.0 < coords_geo.x || coords_geo.y < 0.0 || 1.0 < coords_geo.y) {
+         // Clip outside geometry.
+         color = vec4(0.0);
+diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs
+index 7be9b159..5785b4e2 100644
+--- a/src/render_helpers/shaders/mod.rs
++++ b/src/render_helpers/shaders/mod.rs
+@@ -90,7 +90,9 @@ impl Shaders {
+                 concat!(
+                     include_str!("clipped_surface.frag"),
+                     include_str!("rounding_alpha.frag"),
+-                    "\nvec4 postprocess(vec4 color) { return color; }",
++                    "\nvec4 sample_and_postprocess(vec2 texture_coords, vec2 geo_coords) {\n",
++                    "    return texture2D(tex, texture_coords);\n",
++                    "}",
+                 ),
+                 &[
+                     UniformName::new("niri_scale", UniformType::_1f),
+@@ -116,9 +118,14 @@ impl Shaders {
+                     UniformName::new("geo_size", UniformType::_2f),
+                     UniformName::new("corner_radius", UniformType::_4f),
+                     UniformName::new("input_to_geo", UniformType::Matrix3x3),
++                    UniformName::new("geo_to_input", UniformType::Matrix3x3),
+                     UniformName::new("noise", UniformType::_1f),
+                     UniformName::new("saturation", UniformType::_1f),
+                     UniformName::new("bg_color", UniformType::_4f),
++                    UniformName::new("glass_refraction", UniformType::_1f),
++                    UniformName::new("glass_width", UniformType::_1f),
++                    UniformName::new("glass_chromatic_aberration", UniformType::_1f),
++                    UniformName::new("glass_highlight", UniformType::_1f),
+                 ],
+             )
+             .map_err(|err| {
+diff --git a/src/render_helpers/shaders/postprocess.frag b/src/render_helpers/shaders/postprocess.frag
+index f7c4c22c..7d22e66c 100644
+--- a/src/render_helpers/shaders/postprocess.frag
++++ b/src/render_helpers/shaders/postprocess.frag
+@@ -2,6 +2,14 @@ uniform float noise;
+ uniform float saturation;
+ uniform vec4 bg_color;
+ 
++// Inverse of input_to_geo. This lets the optical pass move through geometry
++// coordinates while still sampling the right part of the source texture.
++uniform mat3 geo_to_input;
++uniform float glass_refraction;
++uniform float glass_width;
++uniform float glass_chromatic_aberration;
++uniform float glass_highlight;
++
+ // Sin-less white noise by David Hoskins (MIT License).
+ // https://www.shadertoy.com/view/4djSRW
+ float hash12(vec2 p) {
+@@ -15,7 +23,61 @@ vec3 saturate(vec3 color, float sat) {
+     return mix(vec3(dot(color, w)), color, sat);
+ }
+ 
+-vec4 postprocess(vec4 color) {
++// Smooth influence of one edge. Combining all four influences rather than
++// selecting the nearest edge avoids the visible diagonal Voronoi seams of a
++// rounded-rectangle SDF when a wide refractive rim is used.
++float glass_edge_weight(float distance_to_edge, float width) {
++    float x = clamp(1.0 - distance_to_edge / width, 0.0, 1.0);
++    return x * x * (3.0 - 2.0 * x);
++}
++
++void glass_field(vec2 p, float width, out float rim, out vec2 inward) {
++    float left = glass_edge_weight(p.x, width);
++    float right = glass_edge_weight(geo_size.x - p.x, width);
++    float top = glass_edge_weight(p.y, width);
++    float bottom = glass_edge_weight(geo_size.y - p.y, width);
++
++    // Opposing edges cancel continuously when their wide rims overlap. At a
++    // corner two edges blend into a diagonal normal without a hard boundary.
++    vec2 field = vec2(left - right, top - bottom);
++    float magnitude = length(field);
++    rim = min(magnitude, 1.0);
++    inward = magnitude > 0.0001 ? field / magnitude : vec2(0.0);
++}
++
++vec2 glass_texture_coords(vec2 geo_coords, vec2 inward, float displacement) {
++    vec2 displaced_geo = geo_coords + inward * displacement / geo_size;
++    return (geo_to_input * vec3(displaced_geo, 1.0)).xy;
++}
++
++vec4 sample_and_postprocess(vec2 texture_coords, vec2 geo_coords) {
++    float rim;
++    vec2 inward;
++    float width = max(glass_width, 0.0001);
++    glass_field(geo_coords * geo_size, width, rim, inward);
++
++    float displacement = glass_refraction * width * rim;
++
++    vec4 color;
++    if (rim > 0.0001 &&
++        (glass_refraction > 0.0 || glass_chromatic_aberration > 0.0)) {
++        float split = glass_chromatic_aberration * rim;
++        vec2 red_coords = glass_texture_coords(geo_coords, inward, displacement + split);
++        vec2 green_coords = glass_texture_coords(geo_coords, inward, displacement);
++        vec2 blue_coords = glass_texture_coords(
++            geo_coords,
++            inward,
++            max(displacement - split, 0.0)
++        );
++
++        vec4 red = texture2D(tex, red_coords);
++        vec4 green = texture2D(tex, green_coords);
++        vec4 blue = texture2D(tex, blue_coords);
++        color = vec4(red.r, green.g, blue.b, green.a);
++    } else {
++        color = texture2D(tex, texture_coords);
++    }
++
+     if (saturation != 1.0) {
+         color.rgb = saturate(color.rgb, saturation);
+     }
+@@ -25,6 +87,25 @@ vec4 postprocess(vec4 color) {
+         color.rgb += (hash12(uv) - 0.5) * noise;
+     }
+ 
++    if (glass_highlight > 0.0) {
++        // Keep the specular rim thin and independent from the refraction width.
++        // Reusing a very wide refraction field here creates a broad white veil
++        // in the top-left corner rather than a glass edge.
++        float highlight_rim;
++        vec2 highlight_inward;
++        glass_field(
++            geo_coords * geo_size,
++            min(width, 8.0),
++            highlight_rim,
++            highlight_inward
++        );
++
++        const vec2 light = vec2(-0.6, -0.8);
++        float facing = max(dot(-highlight_inward, light), 0.0);
++        float specular = pow(facing, 3.0) * highlight_rim * glass_highlight;
++        color.rgb += vec3(specular) * color.a;
++    }
++
+     // Mix bg_color behind the texture (both premultiplied alpha).
+     color = color + bg_color * (1.0 - color.a);
+ 
+diff --git a/src/render_helpers/xray.rs b/src/render_helpers/xray.rs
+index f4b4f861..0fca32a1 100644
+--- a/src/render_helpers/xray.rs
++++ b/src/render_helpers/xray.rs
+@@ -15,6 +15,7 @@ use smithay::utils::{Buffer, Logical, Physical, Point, Rectangle, Scale, Size, T
+ 
+ use crate::backend::tty::{TtyFrame, TtyRenderer, TtyRendererError};
+ use crate::render_helpers::background_effect::RenderParams;
++use crate::render_helpers::blur::GlassOptions;
+ use crate::render_helpers::effect_buffer::EffectBuffer;
+ use crate::render_helpers::renderer::AsGlesFrame as _;
+ use crate::render_helpers::shaders::{mat3_uniform, Shaders};
+@@ -77,6 +78,7 @@ pub struct XrayElement {
+     corner_radius: CornerRadius,
+     scale: f32,
+     blur: bool,
++    glass_options: GlassOptions,
+     noise: f32,
+     saturation: f32,
+     bg_color: Color32F,
+@@ -100,6 +102,7 @@ impl Xray {
+         params: RenderParams,
+         xray_pos: XrayPos,
+         blur: bool,
++        glass_options: GlassOptions,
+         noise: f32,
+         saturation: f32,
+         push: &mut dyn FnMut(XrayElement),
+@@ -198,6 +201,7 @@ impl Xray {
+                     corner_radius,
+                     scale: params.scale as f32,
+                     blur,
++                    glass_options,
+                     noise,
+                     saturation,
+                     bg_color: *bg_color,
+@@ -248,6 +252,7 @@ impl Xray {
+                 corner_radius: corner_radius.scaled_by(zoom as f32),
+                 scale: params.scale as f32,
+                 blur,
++                glass_options,
+                 noise,
+                 saturation,
+                 bg_color: self.backdrop_color,
+@@ -259,15 +264,23 @@ impl Xray {
+ }
+ 
+ impl XrayElement {
+-    fn compute_uniforms(&self) -> [Uniform<'static>; 7] {
++    fn compute_uniforms(&self) -> [Uniform<'static>; 12] {
+         [
+             Uniform::new("niri_scale", self.scale),
+             Uniform::new("geo_size", <[f32; 2]>::from(self.clip_geo_size)),
+             Uniform::new("corner_radius", <[f32; 4]>::from(self.corner_radius)),
+             mat3_uniform("input_to_geo", self.input_to_clip_geo),
++            mat3_uniform("geo_to_input", self.input_to_clip_geo.inverse()),
+             Uniform::new("noise", self.noise),
+             Uniform::new("saturation", self.saturation),
+             Uniform::new("bg_color", self.bg_color.components()),
++            Uniform::new("glass_refraction", self.glass_options.refraction),
++            Uniform::new("glass_width", self.glass_options.refraction_width),
++            Uniform::new(
++                "glass_chromatic_aberration",
++                self.glass_options.chromatic_aberration,
++            ),
++            Uniform::new("glass_highlight", self.glass_options.highlight),
+         ]
+     }
+ }
