@@ -1,6 +1,6 @@
 pkgname = "coreutils"
 # git snapshot of main (0.9.0 + openssl feature); date = commit date
-pkgver = "0.9.0.20260711"
+pkgver = "0.10.0"
 pkgrel = 0
 _commit = "3ceaab508f7178947cbaf7e806a70bb4905f8378"
 build_style = "cargo"
