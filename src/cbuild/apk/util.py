@@ -4,34 +4,6 @@ from enum import Enum
 
 import re
 
-
-def strip_tar_endhdr(data):
-    tlen = len(data)
-    # length of the initial archive without trailing headers
-    dlen = 0
-    dbeg = 0
-    while True:
-        # this should not happen though
-        if (tlen - dlen) < 512:
-            break
-        # try if there's a name
-        hname = data[dbeg : dbeg + 100]
-        # trailing header
-        if hname[0] == 0:
-            break
-        # header size
-        dlen += 512
-        # data size, if any
-        szb = data[dbeg + 124 : dbeg + 136].rstrip(b"\x00")
-        if len(szb) > 0:
-            # align to 512
-            dlen += (int(szb, 8) + 511) & ~511
-        # new header start
-        dbeg = dlen
-
-    return data[0:dlen]
-
-
 _valid_ops = {
     "<=": True,
     "<": True,
@@ -92,29 +64,7 @@ def _op_find(pat):
     return opid, 2
 
 
-def get_namever(pkgp):
-    # maybe version dash
-    fdash = pkgp.find("-")
-    # invalid ver (ver should be FOO-VER-rREV)
-    if fdash < 0:
-        return None, None
-    # maybe revision dash
-    sdash = pkgp.find("-", fdash + 1)
-    # invalid ver again
-    if sdash < 0:
-        return None, None
-    # now get rid of any remaining dashes
-    while True:
-        ndash = pkgp.find("-", sdash + 1)
-        if ndash < 0:
-            break
-        fdash = sdash
-        sdash = ndash
-    # and return name/ver
-    return pkgp[0:fdash], pkgp[fdash + 1 :]
-
-
-def pkg_match(ver, pattern):
+def pkg_match(pname, ver, pattern):
     sepidx = -1
 
     for i, c in enumerate(pattern):
@@ -124,16 +74,11 @@ def pkg_match(ver, pattern):
     else:
         return False
 
-    # ver must be foo-VERSION where foo matches pattern before the operator
-    if len(ver) <= sepidx or ver[sepidx] != "-":
-        return False
-
     # names don't match
-    if ver[0:sepidx] != pattern[0:sepidx]:
+    if pname != pattern[0:sepidx]:
         return False
 
     pattern = pattern[sepidx:]
-    ver = ver[sepidx + 1 :]
 
     sep1, sep1l = _op_find(pattern)
 

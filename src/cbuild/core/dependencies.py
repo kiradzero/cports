@@ -171,7 +171,7 @@ def _install_from_repo(pkg, pkglist, cross=False):
             allow_untrusted=not signkey,
         )
     elif cross and pkg.profile().cross:
-        ret = apki.call_chroot(
+        ret = apki.call(
             "add",
             [
                 "--root",
@@ -183,6 +183,7 @@ def _install_from_repo(pkg, pkglist, cross=False):
             capture_output=True,
             arch=pkg.profile().arch,
             allow_untrusted=not signkey,
+            chroot=True,
         )
     else:
         # write world file and fix instead of adding to account for previous
@@ -193,12 +194,13 @@ def _install_from_repo(pkg, pkglist, cross=False):
             for pkgn in pkglist:
                 wf.write(f"{pkgn}\n")
         # and then perform the transaction
-        ret = apki.call_chroot(
+        ret = apki.call(
             "fix",
             [],
             pkg,
             capture_output=True,
             allow_untrusted=not signkey,
+            chroot=True,
         )
     if ret.returncode != 0:
         outl = ret.stderr.strip().decode()
@@ -219,22 +221,25 @@ def _get_vers(pkgs, pkg, sysp, arch):
 
     ret = {}
     with flock.lock(flock.apklock(arch if arch else chroot.host_cpu())):
-        out, crepos = apki.call(
-            "search",
-            ["--from", "none", "-e", "-a", *plist],
+        vers, crepos = apki.query(
+            ["name", "version"],
+            [
+                "--from",
+                "none",
+                "--all-matches",
+                *plist,
+            ],
             pkg,
             root=sysp,
-            capture_output=True,
             arch=arch,
             allow_untrusted=True,
             return_repos=True,
         )
-    if out.returncode >= len(plist):
+    if not vers:
         return {}, None
 
-    # map the output to a dict
-    for f in out.stdout.strip().decode().split("\n"):
-        nn, nv = autil.get_namever(f)
+    for ver in vers:
+        nn, nv = ver["name"], ver["version"]
         if nn not in ret:
             ret[nn] = [nv]
         else:
@@ -258,7 +263,7 @@ def _is_available(pkgn, pkgop, pkgv, pkg, vers, crepos, sysp, arch):
     # first match against every version available
     for apn in reversed(pvers):
         # matched at least one version
-        if autil.pkg_match(f"{pkgn}-{apn}", ppat):
+        if autil.pkg_match(pkgn, apn, ppat):
             break
     else:
         # matched no version, so build
@@ -269,30 +274,33 @@ def _is_available(pkgn, pkgop, pkgv, pkg, vers, crepos, sysp, arch):
         return pvers[0], None, None
 
     # now check repos individually in priority order
+    # TODO: this could be refactored into a single query call by checking
+    # the repositories field, which would be a little faster, but not much
     with flock.lock(flock.apklock(arch)):
         for cr in crepos:
             if cr == "--repository":
                 continue
-            st = (
-                apki.call(
-                    "search",
-                    ["--from", "none", "--repository", cr, "-e", "-a", pkgn],
-                    None,
-                    root=sysp,
-                    capture_output=True,
-                    arch=arch,
-                    allow_untrusted=True,
-                )
-                .stdout.strip()
-                .decode()
+            jsn = apki.query(
+                ["name", "version"],
+                [
+                    "--from",
+                    "none",
+                    "--repository",
+                    cr,
+                    "--all-matches",
+                    pkgn,
+                ],
+                None,
+                root=sysp,
+                arch=arch,
+                allow_untrusted=True,
             )
-            if len(st) == 0:
+            if not jsn:
                 continue
-            pn = st.split("\n")
             # highest priority repo takes all
-            if len(pn) > 0:
-                nn, nv = autil.get_namever(pn[0])
-                if autil.pkg_match(pn[0], ppat):
+            if len(jsn) > 0:
+                nn, nv = jsn[0]["name"], jsn[0]["version"]
+                if autil.pkg_match(nn, nv, ppat):
                     return nv, None, None
                 return None, nv, cr
 
@@ -477,11 +485,12 @@ def install(pkg, origpkg, step, depmap, hostdep, update_check):
         if not fulln or (pkgop and pkgv and not rdv):
             pkg.error(f"template '{pkgn}' cannot be resolved")
         if pkgop and pkgv:
-            rfv = f"{pkgn}-{rdv}"
             rpt = pkgn + pkgop + pkgv
             # ensure the build is not futile
-            if not autil.pkg_match(rfv, rpt):
-                pkg.error(f"version {rfv} does not match dependency {rpt}")
+            if not autil.pkg_match(pkgn, rdv, rpt):
+                pkg.error(
+                    f"version {pkgn}={rdv} does not match dependency {rpt}"
+                )
         # treat the same as any missing target dependency, but without install
         missing_deps.append(fulln)
 

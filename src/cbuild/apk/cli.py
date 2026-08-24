@@ -1,8 +1,9 @@
-from cbuild.core import logger, paths, chroot, profile
+from cbuild.core import logger, paths, chroot as cbroot, profile
 
 from . import sign as asign
 
 import os
+import json
 import pathlib
 import subprocess
 
@@ -28,14 +29,14 @@ def collect_repos(mrepo, intree, arch, use_altrepo, use_stage, use_net):
         srepos = mrepo.rparent.source_repositories
 
     if not arch:
-        arch = chroot.host_cpu()
+        arch = cbroot.host_cpu()
 
     prof = profile.get_profile(arch)
     use_cache = False
 
     rrepos = set(prof.repos)
 
-    for r in chroot.get_confrepos():
+    for r in cbroot.get_confrepos():
         if not r.startswith("/"):
             # should be a remote repository, skip outright if we
             # know that remote repos will not be used during this run
@@ -80,7 +81,7 @@ def collect_repos(mrepo, intree, arch, use_altrepo, use_stage, use_net):
     # alt repository comes last in order to be lower priority
     # also, always ignore stage for altrepo, as it should be considered opaque
     if paths.alt_repository() and use_altrepo:
-        for r in chroot.get_confrepos():
+        for r in cbroot.get_confrepos():
             if not r.startswith("/"):
                 continue
             r = r.lstrip("/")
@@ -124,150 +125,95 @@ def call(
     use_stage=True,
     allow_network=True,
     return_repos=False,
+    chroot=False,
 ):
     if allow_network:
         allow_network = _use_net
     cmd = [
-        paths.apk(),
         subcmd,
         "--no-interactive",
-        "--root",
-        root if root else paths.bldroot(),
         "--repositories-file",
         "/dev/null",
     ]
+    if not chroot:
+        cmd += ["--root", root if root else paths.bldroot()]
     if arch:
         cmd += ["--arch", arch]
     if not allow_network:
         cmd += ["--no-network"]
     if allow_untrusted:
-        cmd.append("--allow-untrusted")
+        cmd += ["--allow-untrusted"]
     if subcmd in ["add", "del", "fix", "upgrade"]:
-        cmd.append("--clean-protected")
+        cmd += ["--clean-protected"]
 
     crepos = collect_repos(
-        mrepo, False, arch, use_altrepo, use_stage, allow_network
+        mrepo, chroot, arch, use_altrepo, use_stage, allow_network
     )
-
-    retv = subprocess.run(
-        cmd + crepos + args, cwd=cwd, env=env, capture_output=capture_output
-    )
-    if return_repos:
-        return retv, crepos
-    return retv
-
-
-# should never be called during stage 0 builds, only with a real chroot
-def call_chroot(
-    subcmd,
-    args,
-    mrepo,
-    capture_output=False,
-    check=False,
-    arch=None,
-    allow_untrusted=False,
-    use_stage=True,
-    full_chroot=False,
-    allow_network=True,
-    return_repos=False,
-):
-    from cbuild.core import chroot
-
-    if allow_network:
-        allow_network = _use_net
-
-    mount_cache = subcmd in ["add", "del", "fix", "update", "upgrade"]
-
-    if full_chroot:
-        cmd = [subcmd]
-    else:
-        cmd = [subcmd, "--repositories-file", "/dev/null"]
-    cmd.append("--no-interactive")
-    if arch:
-        cmd += ["--arch", arch]
-    if not allow_network:
-        cmd += ["--no-network"]
-    if allow_untrusted:
-        cmd.append("--allow-untrusted")
-    if mount_cache and subcmd != "update":
-        cmd.append("--clean-protected")
-
-    if not full_chroot:
-        crepos = collect_repos(
-            mrepo, True, arch, True, use_stage, allow_network
-        )
-    else:
-        crepos = []
-
     cmd += crepos
 
-    retv = chroot.enter(
-        "apk",
-        *cmd,
-        *args,
-        capture_output=capture_output,
-        check=check,
-        fakeroot=True,
-        mount_binpkgs=True,
-        mount_cbuild_cache=mount_cache,
-    )
+    if chroot:
+        retv = cbroot.enter(
+            "apk",
+            *cmd,
+            *args,
+            capture_output=capture_output,
+            fakeroot=True,
+            mount_binpkgs=True,
+            mount_cbuild_cache=subcmd
+            in ["add", "del", "fix", "update", "upgrade"],
+        )
+    else:
+        retv = subprocess.run(
+            [paths.apk(), *cmd, *args],
+            cwd=cwd,
+            env=env,
+            capture_output=capture_output,
+        )
     if return_repos:
         return retv, crepos
     return retv
 
 
-def is_installed(pkgn, pkg=None):
-    cpf = pkg.rparent.profile() if pkg else None
-
-    if pkg and cpf.cross:
-        sysp = paths.bldroot() / cpf.sysroot.relative_to("/")
-        aarch = cpf.arch
-    else:
-        sysp = paths.bldroot()
-        aarch = None
-
-    return (
-        call(
-            "info",
-            ["--installed", pkgn],
-            None,
-            root=sysp,
-            capture_output=True,
-            arch=aarch,
-            allow_untrusted=True,
-        ).returncode
-        == 0
+def query(fields, args, mrepo, return_repos=False, **kwargs):
+    retv, crepos = call(
+        "query",
+        ["--format=json", f"--fields={','.join(fields)}", *args],
+        mrepo,
+        return_repos=True,
+        capture_output=True,
+        **kwargs,
     )
-
-
-def get_provider(thing, pkg):
-    cpf = pkg.rparent.profile() if pkg else None
-
-    if pkg and cpf.cross:
-        sysp = paths.bldroot() / cpf.sysroot.relative_to("/")
-        aarch = cpf.arch
-    else:
-        sysp = paths.bldroot()
-        aarch = None
-
-    out = (
-        call(
-            "search",
-            ["--from", "installed", "-q", "-e", thing],
-            None,
-            root=sysp,
-            capture_output=True,
-            arch=aarch,
-            allow_untrusted=True,
-        )
-        .stdout.strip()
-        .decode()
-    )
-
-    if len(out) == 0:
+    if retv.returncode != 0:
+        if return_repos:
+            return None, crepos
         return None
+    outv = json.loads(retv.stdout.decode())
+    if return_repos:
+        return outv, crepos
+    return outv
 
-    return out
+
+def get_provider(pkgn, pkg=None):
+    cpf = pkg.rparent.profile() if pkg else None
+
+    if pkg and cpf.cross:
+        sysp = paths.bldroot() / cpf.sysroot.relative_to("/")
+        aarch = cpf.arch
+    else:
+        sysp = paths.bldroot()
+        aarch = None
+
+    qv = query(
+        ["name"],
+        ["--installed", "--match=name,provides", pkgn],
+        None,
+        root=sysp,
+        arch=aarch,
+        allow_untrusted=True,
+    )
+    if qv:
+        return qv[0]["name"]
+    return None
 
 
 def check_version(*args):
@@ -359,10 +305,8 @@ def summarize_repo(repopath, olist, quiet=False):
 
 
 def prune(repopath, arch=None, dry=False):
-    from cbuild.core import chroot
-
     if not arch:
-        arch = chroot.host_cpu()
+        arch = cbroot.host_cpu()
 
     repopath = repopath / arch
 
